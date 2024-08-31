@@ -50,19 +50,27 @@ Before you begin, ensure you have the following installed:
 - [Leo CLI](https://developer.aleo.org/leo/installation)
 - [Git](https://git-scm.com/)
 
+To check, open a terminal and run the following commands:
+```bash
+   mkdir guess_who_zkp
+   cd guess_who_zkp
+   leo new guess_who_zkp
+```
+
 ## 3. Aleo Leo Setup
 
 ### 3.1 Setting Up the Leo Project
 
 1. Create a new directory for your project:
    ```bash
-    mkdir guess_who_zkp
-    cd guess_who_zkp
+    mkdir Guess-Who-ZKP-Project
+    cd Guess-Who-ZKP-Project
    ```
 
 2. Initialize a new Leo project:
    ```bash
     leo new guess_who_zkp
+    cd guess_who_zkp
    ```
 
 
@@ -255,6 +263,8 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
 
 ### 3.3 Compiling and Deploying the Leo Contract
 
+**Note**: If you need to make a [new wallet go here](https://www.provable.tools/account) and if you need [testnet credits go here](https://discord.com/channels/913160862670397510/1202322326230937640).
+
 1. Compile the contract:
    ```bash
     leo build
@@ -264,7 +274,6 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
    ```bash
     leo deploy guess_who_zkp
    ```
-
    Note: Keep the program ID returned after deployment for use in the React app.
 
 ## 4. React Application
