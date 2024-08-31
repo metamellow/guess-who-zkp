@@ -1,0 +1,77 @@
+.App {
+  text-align: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  }
+
+  .wallet-connection {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  }
+
+  .home, .create-game, .join-game, .game-board {
+  max-width: 800px;
+  margin: 0 auto;
+  }
+
+  button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  }
+
+  button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  }
+
+  .loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  }
+
+  .spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+  }
+
+  .error-message {
+  color: red;
+  font-weight: bold;
+  margin: 10px 0;
+  }
+
+  .characters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  }
+
+  .game-actions {
+  margin-top: 20px;
+  }
+
+  .player-balance {
+  margin-top: 20px;
+  font-weight: bold;
+  }

@@ -36,6 +36,8 @@ Hi frens! Please consider supporting me by following my socials:
 
    4.5. [Styling](#45-styling)
 
+   4.6 [Character Images](#46-character-images)
+
 5. [Running the Application](#5-running-the-application)
 
 
@@ -1168,6 +1170,12 @@ The application uses two main utility files:
    font-weight: bold;
    }
 ```
+
+### 4.6 Styling
+
+1. Create a new folder in the `guess-who-dapp/public/` directory called `character-images`.
+
+2. Upload all 24 of [the images found here](https://github.com/metamellow/guess-who-zkp/tree/main/guess-who-dapp/character-images) into that folder.
 
 ## 5. Running the Application
 
