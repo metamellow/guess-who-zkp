@@ -1,6 +1,7 @@
 {
-    "program": "guess_who_zkp.aleo",
-    "version": "0.0.0",
-    "description": "",
-    "license": "MIT"
+  "program": "guess_who_zkp.aleo",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": null
 }

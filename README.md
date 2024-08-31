@@ -26,9 +26,9 @@ Hi frens! Please consider supporting me by following my socials:
 
 4. [React Application](#4-react-application)
 
-   4.1. [Project Structure](#41-project-structure)
+   4.1. [Setting Up the React Project](#41-setting-up-the-react-project)
    
-   4.2. [Setting Up the React Project](#42-setting-up-the-react-project)
+   4.2. [Project Structure](#42-project-structure)
 
    4.3. [Main Components](#43-main-components)
 
@@ -263,27 +263,46 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
 
 ### 3.3 Compiling and Deploying the Leo Contract
 
-**Note**: If you need to make a [new wallet go here](https://www.provable.tools/account) and if you need [testnet credits go here](https://discord.com/channels/913160862670397510/1202322326230937640).
-
 1. Compile the contract:
    ```bash
     leo build
    ```
+2. Update your Aleo account:
 
-2. Deploy the contract to the Aleo testnet (ensure you have testnet credits):
+   2.1. If you need to make a [new wallet go here](https://www.provable.tools/account) and if you need [testnet credits go here](https://discord.com/channels/913160862670397510/1202322326230937640). Base deployment cost for this project at time of writing is ~13 credits.
+
+   2.2. Replace the default private key in the .env with your true key.
+
+3. Deploy the contract to the Aleo testnet (ensure you have testnet credits):
    ```bash
-    leo deploy guess_who_zkp
+    leo deploy
    ```
-   Note: Keep the program ID returned after deployment for use in the React app.
+   **Note:** Keep the program ID returned after deployment for use in the React app.
 
 ## 4. React Application
 
-### 4.1 Project Structure
+### 4.1 Setting Up the React Project
+
+1. In the `Guess-Who-ZKP-Project` directory, create a new React app:
+   ```bash
+    npx create-react-app guess-who-dapp
+    cd guess-who-dapp
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
+   ```
+
+2. Create a `.env` file in the `guess-who-dapp` directory with the following content:
+   ```
+    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
+    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
+    REACT_APP_GAME_COST=0.0001
+   ```
+
+### 4.2 Project Structure
 
 The final React application will be structured as follows:
 
 ```rust
-    client/
+    guess-who-dapp/
     ├── public/
     │   └── character-images/
     ├── src/
@@ -306,22 +325,6 @@ The final React application will be structured as follows:
     ├── .env
     └── package.json
 ```
-
-### 4.2 Setting Up the React Project
-
-1. In the `guess_who_zkp` directory, create a new React app:
-   ```bash
-    npx create-react-app client
-    cd client
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
-   ```
-
-2. Create a `.env` file in the `client` directory with the following content:
-   ```
-    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
-    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
-    REACT_APP_GAME_COST=0.0001
-   ```
 
 ### 4.3 Main Components
 
@@ -1170,7 +1173,7 @@ The application uses two main utility files:
 
 To run your application:
 
-1. Ensure you're in the `client` directory.
+1. Ensure you're in the `guess-who-dapp` directory.
 2. Install all dependencies:
    ```bash
     npm install
