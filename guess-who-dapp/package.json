@@ -5,6 +5,7 @@
   "dependencies": {
     "@demox-labs/aleo-wallet-adapter-leo": "^0.0.24",
     "@demox-labs/aleo-wallet-adapter-react": "^0.0.21",
+    "@demox-labs/aleo-wallet-adapter-reactui": "^0.0.35",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

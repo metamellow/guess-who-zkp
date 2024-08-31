@@ -1,141 +1,150 @@
 import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
-import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 
 const NETWORK = WalletAdapterNetwork.Testnet;
 const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
-const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 
-let wallet = null;
+export const getPlayerBalance = async (publicKey) => {
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-export const initializeWallet = async () => {
-wallet = new LeoWalletAdapter({ appName: 'Guess Who ZKP' });
-await wallet.connect();
+  try {
+    const result = await window.leo.requestRecords({
+      programId: PROGRAM_NAME,
+      functionName: 'get_player_balance',
+      inputs: [publicKey]
+    });
+
+    if (result && result.length > 0) {
+      return result[0].balance;
+    } else {
+      return 0;
+    }
+  } catch (error) {
+    console.error("Error in getPlayerBalance:", error);
+    throw error;
+  }
 };
 
 export const createGame = async (character) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const inputs = [
-   wallet.publicKey,
-   JSON.stringify(character)
-];
+  try {
+    const result = await window.leo.requestTransaction({
+      programId: PROGRAM_NAME,
+      functionName: 'create_game',
+      inputs: [JSON.stringify(character)],
+      fee: 1000000, // 0.001 Aleo
+    });
 
-const fee = process.env.REACT_APP_GAME_COST; // From .env file
-
-const transaction = await wallet.requestTransaction({
-   program: PROGRAM_NAME,
-   function: 'create_game',
-   inputs,
-   fee
-});
-
-return transaction;
+    return result;
+  } catch (error) {
+    console.error("Error in createGame:", error);
+    throw error;
+  }
 };
 
 export const joinGame = async (gameId, character) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const inputs = [
-   gameId,
-   wallet.publicKey,
-   JSON.stringify(character)
-];
+  try {
+    const result = await window.leo.requestTransaction({
+      programId: PROGRAM_NAME,
+      functionName: 'join_game',
+      inputs: [gameId, JSON.stringify(character)],
+      fee: 1000000, // 0.001 Aleo
+    });
 
-const fee = process.env.REACT_APP_GAME_COST; // From .env file
-
-const transaction = await wallet.requestTransaction({
-   program: PROGRAM_NAME,
-   function: 'join_game',
-   inputs,
-   fee
-});
-
-return transaction;
+    return result;
+  } catch (error) {
+    console.error("Error in joinGame:", error);
+    throw error;
+  }
 };
 
 export const askQuestion = async (gameId, questionType, questionValue) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const inputs = [
-   gameId,
-   wallet.publicKey,
-   questionType,
-   questionValue
-];
+  try {
+    const result = await window.leo.requestTransaction({
+      programId: PROGRAM_NAME,
+      functionName: 'ask_question',
+      inputs: [gameId, questionType, questionValue],
+      fee: 1000000, // 0.001 Aleo
+    });
 
-const fee = 0.0001; // 0.0001 Aleo
-
-const transaction = await wallet.requestTransaction({
-   program: PROGRAM_NAME,
-   function: 'ask_question',
-   inputs,
-   fee
-});
-
-return transaction;
+    return result;
+  } catch (error) {
+    console.error("Error in askQuestion:", error);
+    throw error;
+  }
 };
 
 export const claimReward = async (gameId) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const inputs = [
-   gameId,
-   wallet.publicKey
-];
+  try {
+    const result = await window.leo.requestTransaction({
+      programId: PROGRAM_NAME,
+      functionName: 'claim_reward',
+      inputs: [gameId],
+      fee: 1000000, // 0.001 Aleo
+    });
 
-const fee = 0.0001; // 0.0001 Aleo
-
-const transaction = await wallet.requestTransaction({
-   program: PROGRAM_NAME,
-   function: 'claim_reward',
-   inputs,
-   fee
-});
-
-return transaction;
+    return result;
+  } catch (error) {
+    console.error("Error in claimReward:", error);
+    throw error;
+  }
 };
 
 export const endGame = async (gameId) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const inputs = [gameId];
+  try {
+    const result = await window.leo.requestTransaction({
+      programId: PROGRAM_NAME,
+      functionName: 'end_game',
+      inputs: [gameId],
+      fee: 1000000, // 0.001 Aleo
+    });
 
-const fee = 0.0001; // 0.0001 Aleo
-
-const transaction = await wallet.requestTransaction({
-   program: PROGRAM_NAME,
-   function: 'end_game',
-   inputs,
-   fee
-});
-
-return transaction;
+    return result;
+  } catch (error) {
+    console.error("Error in endGame:", error);
+    throw error;
+  }
 };
 
 export const getGameState = async (gameId) => {
-if (!wallet) await initializeWallet();
+  if (!window.leo) {
+    throw new Error("Leo wallet is not installed");
+  }
 
-const result = await wallet.requestRecords({
-   program: PROGRAM_NAME,
-   filter: {
-      key: 'games',
-      value: gameId
-   }
-});
+  try {
+    const result = await window.leo.requestRecords({
+      programId: PROGRAM_NAME,
+      functionName: 'get_game_state',
+      inputs: [gameId]
+    });
 
-return result[0];
-};
-
-export const getPlayerBalance = async (address) => {
-if (!wallet) await initializeWallet();
-
-const result = await wallet.requestRecords({
-   program: PROGRAM_NAME,
-   filter: {
-      key: 'player_balances',
-      value: address
-   }
-});
-
-return result[0];
+    if (result && result.length > 0) {
+      return result[0];
+    } else {
+      throw new Error("Game not found");
+    }
+  } catch (error) {
+    console.error("Error in getGameState:", error);
+    throw error;
+  }
 };

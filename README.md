@@ -289,7 +289,7 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
    ```bash
     npx create-react-app guess-who-dapp
     cd guess-who-dapp
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv @demox-labs/aleo-wallet-adapter-reactui react-router-dom@6
    ```
 
 2. Create a `.env` file in the `guess-who-dapp` directory with the following content:
@@ -336,7 +336,7 @@ Here are the main React components of the application:
 
 ```javascript
    import React from 'react';
-   import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+   import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
    import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
    import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
    import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
@@ -367,12 +367,12 @@ Here are the main React components of the application:
          <Router>
             <div className="App">
                <WalletConnectionButton />
-               <Switch>
-               <Route exact path="/" component={Home} />
-               <Route path="/create" component={CreateGame} />
-               <Route path="/join" component={JoinGame} />
-               <Route path="/game/:id" component={GameBoard} />
-               </Switch>
+               <Routes>
+               <Route path="/" element={<Home />} />
+               <Route path="/create" element={<CreateGame />} />
+               <Route path="/join" element={<JoinGame />} />
+               <Route path="/game/:id" element={<GameBoard />} />
+               </Routes>
             </div>
          </Router>
          </WalletModalProvider>
@@ -422,8 +422,8 @@ Here are the main React components of the application:
 
 ```javascript
    import React, { useState } from 'react';
+   import { useNavigate } from 'react-router-dom';
    import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-   import { useHistory } from 'react-router-dom';
    import { characters } from '../utils/characterData';
    import { createGame } from '../utils/aleoUtils';
    import LoadingSpinner from './LoadingSpinner';
@@ -434,7 +434,7 @@ Here are the main React components of the application:
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
    const { publicKey } = useWallet();
-   const history = useHistory();
+   const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
       e.preventDefault();
@@ -464,7 +464,7 @@ Here are the main React components of the application:
 
          const result = await createGame(character);
          console.log("Game created:", result);
-         history.push(`/game/${result.gameId}`);
+         navigate(`/game/${result.gameId}`);
       } catch (error) {
          console.error("Error creating game:", error);
          setError("Failed to create game. Please try again.");
@@ -508,8 +508,8 @@ Here are the main React components of the application:
 
 ```javascript
    import React, { useState } from 'react';
+   import { useNavigate } from 'react-router-dom';
    import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-   import { useHistory } from 'react-router-dom';
    import { characters } from '../utils/characterData';
    import { joinGame } from '../utils/aleoUtils';
    import LoadingSpinner from './LoadingSpinner';
@@ -521,7 +521,7 @@ Here are the main React components of the application:
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
    const { publicKey } = useWallet();
-   const history = useHistory();
+   const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
       e.preventDefault();
@@ -551,7 +551,7 @@ Here are the main React components of the application:
 
          const result = await joinGame(gameId, character);
          console.log("Joined game:", result);
-         history.push(`/game/${gameId}`);
+         navigate(`/game/${gameId}`);
       } catch (error) {
          console.error("Error joining game:", error);
          setError("Failed to join game. Please try again.");
@@ -1074,7 +1074,7 @@ The application uses two main utility files:
    glasses: { true: 1, false: 0 },
    facial_hair: { true: 1, false: 0 },
    hat: { true: 1, false: 0 },
-   gender: { Male: 1, Female: 2, Non-Binary: 3 }
+   gender: { Male: 1, Female: 2, "Non-Binary": 3 }
    };
 
    export const indexToAttribute = {

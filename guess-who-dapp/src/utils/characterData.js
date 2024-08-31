@@ -33,7 +33,7 @@ export const characters = [
     glasses: { true: 1, false: 0 },
     facial_hair: { true: 1, false: 0 },
     hat: { true: 1, false: 0 },
-    gender: { Male: 1, Female: 2, Non-Binary: 3 }
+    gender: { Male: 1, Female: 2, "Non-Binary": 3 }
     };
  
     export const indexToAttribute = {
