@@ -14,24 +14,26 @@ Hi frens! Please consider supporting me by following my socials:
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
-3. [Project Setup](#project-setup)
+3. [Aleo Leo Setup](#aleo-leo-setup)
 
    3.1. [Setting Up the Leo Project](#setting-up-the-leo-project)
+
+   3.2. [Entering the Leo Contract Code](#leo-contract)
    
-   3.2. [Compiling and Deploying the Leo Contract](#compiling-and-deploying-the-leo-contract)
+   3.3. [Compiling and Deploying the Leo Contract](#compiling-and-deploying-the-leo-contract)
    
-   3.3. [Setting Up the React Project](#setting-up-the-react-project)
-4. [Leo Contract](#leo-contract)
-5. [React Application](#react-application)
+4. [React Application](#react-application)
    
-   5.1. [Project Structure](#project-structure)
+   4.1. [Setting Up the React Project](#setting-up-the-react-project)
    
-   5.2. [Main Components](#main-components)
+   4.2. [Project Structure](#project-structure)
    
-   5.3. [Utility Functions](#utility-functions)
+   4.3. [Main Components](#main-components)
    
-   5.4. [Styling](#styling)
-6. [Running the Application](#running-the-application)
+   4.4. [Utility Functions](#utility-functions)
+   
+   4.5. [Styling](#styling)
+5. [Running the Application](#running-the-application)
 
 ## 1. Introduction
 
@@ -44,7 +46,7 @@ Before you begin, ensure you have the following installed:
 - [Leo CLI](https://developer.aleo.org/leo/installation)
 - [Git](https://git-scm.com/)
 
-## 3. Project Setup
+## 3. Aleo Leo Setup
 
 ### 3.1 Setting Up the Leo Project
 
@@ -59,37 +61,8 @@ Before you begin, ensure you have the following installed:
     leo new guess_who_zkp
    ```
 
-### 3.2 Compiling and Deploying the Leo Contract
 
-1. Compile the contract:
-   ```bash
-    leo build
-   ```
-
-2. Deploy the contract to the Aleo testnet (ensure you have testnet credits):
-   ```bash
-    leo deploy guess_who_zkp
-   ```
-
-   Note: Keep the program ID returned after deployment for use in the React app.
-
-### 3.3 Setting Up the React Project
-
-1. In the `guess_who_zkp` directory, create a new React app:
-   ```bash
-    npx create-react-app client
-    cd client
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
-   ```
-
-2. Create a `.env` file in the `client` directory with the following content:
-   ```
-    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
-    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
-    REACT_APP_GAME_COST=0.0001
-   ```
-
-## 4. Leo Contract
+### 3.3 Entering the Leo Contract Code
 
 The Leo contract (`main.leo`) defines the game logic, including creating games, joining games, asking questions, and claiming rewards.
 
@@ -275,6 +248,36 @@ The Leo contract (`main.leo`) defines the game logic, including creating games, 
       }
    }
 ```
+
+### 3.3 Compiling and Deploying the Leo Contract
+
+1. Compile the contract:
+   ```bash
+    leo build
+   ```
+
+2. Deploy the contract to the Aleo testnet (ensure you have testnet credits):
+   ```bash
+    leo deploy guess_who_zkp
+   ```
+
+   Note: Keep the program ID returned after deployment for use in the React app.
+
+### 3.3 Setting Up the React Project
+
+1. In the `guess_who_zkp` directory, create a new React app:
+   ```bash
+    npx create-react-app client
+    cd client
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
+   ```
+
+2. Create a `.env` file in the `client` directory with the following content:
+   ```
+    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
+    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
+    REACT_APP_GAME_COST=0.0001
+   ```
 
 ## 5. React Application
 
