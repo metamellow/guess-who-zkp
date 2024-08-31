@@ -2,13 +2,13 @@
 
 Hi frens! Please consider supporting me by following my socials:
 
-[<kbd> Youtube </kbd>][KBD]
+[<ytb> Youtube </ytb>][YTB]
 
-[KBD]: Types/KBD.md
+[YTB]: [YTB](https://m.youtube.com/@cryptocoffeechats)
 
 [<kbd> Twitter </kbd>][KBD]
 
-[KBD]: Types/KBD.md
+[KBD]: https://m.youtube.com/@cryptocoffeechats
 
 
 ## Table of Contents
@@ -57,6 +57,16 @@ To check, open a terminal and run the following commands:
    mkdir guess_who_zkp
    cd guess_who_zkp
    leo new guess_who_zkp
+
+
+
+
+
+
+
+
+
+.
 ```
 
 ## 3. Aleo Leo Setup
