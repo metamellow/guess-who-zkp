@@ -2,38 +2,42 @@
 
 Hi frens! Please consider supporting me by following my socials:
 
-[<kbd> Youtube </kbd>][KBD]
+[<kbd> Youtube </kbd>][KBD]
 
 [KBD]: Types/KBD.md
 
-[<kbd> Twitter </kbd>][KBD]
+[<kbd> Twitter </kbd>][KBD]
 
 [KBD]: Types/KBD.md
 
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [Prerequisites](#prerequisites)
-3. [Aleo Leo Setup](#aleo-leo-setup)
+1. [Introduction](#1-introduction)
 
-   3.1. [Setting Up the Leo Project](#setting-up-the-leo-project)
+2. [Prerequisites](#2-prerequisites)
 
-   3.2. [Entering the Leo Contract Code](#leo-contract)
+3. [Aleo Leo Setup](#3-aleo-leo-setup)
+
+   3.1. [Setting Up the Leo Project](#31-setting-up-the-leo-project)
+
+   3.2. [Entering the Leo Contract Code](#32-entering-the-leo-contract-code)
+
+   3.3. [Compiling and Deploying the Leo Contract](#33-compiling-and-deploying-the-leo-contract)
+
+4. [React Application](#4-react-application)
+
+   4.1. [Project Structure](#41-project-structure)
    
-   3.3. [Compiling and Deploying the Leo Contract](#compiling-and-deploying-the-leo-contract)
-   
-4. [React Application](#react-application)
-   
-   4.1. [Setting Up the React Project](#setting-up-the-react-project)
-   
-   4.2. [Project Structure](#project-structure)
-   
-   4.3. [Main Components](#main-components)
-   
-   4.4. [Utility Functions](#utility-functions)
-   
-   4.5. [Styling](#styling)
-5. [Running the Application](#running-the-application)
+   4.2. [Setting Up the React Project](#42-setting-up-the-react-project)
+
+   4.3. [Main Components](#43-main-components)
+
+   4.4. [Utility Functions](#44-utility-functions)
+
+   4.5. [Styling](#45-styling)
+
+5. [Running the Application](#5-running-the-application)
+
 
 ## 1. Introduction
 
@@ -62,9 +66,9 @@ Before you begin, ensure you have the following installed:
    ```
 
 
-### 3.3 Entering the Leo Contract Code
+### 3.2 Entering the Leo Contract Code
 
-The Leo contract (`main.leo`) defines the game logic, including creating games, joining games, asking questions, and claiming rewards.
+The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, including creating games, joining games, asking questions, and claiming rewards.
 
 ```rust
     program guess_who_zkp.aleo {
@@ -263,27 +267,11 @@ The Leo contract (`main.leo`) defines the game logic, including creating games, 
 
    Note: Keep the program ID returned after deployment for use in the React app.
 
-### 3.3 Setting Up the React Project
+## 4. React Application
 
-1. In the `guess_who_zkp` directory, create a new React app:
-   ```bash
-    npx create-react-app client
-    cd client
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
-   ```
+### 4.1 Project Structure
 
-2. Create a `.env` file in the `client` directory with the following content:
-   ```
-    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
-    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
-    REACT_APP_GAME_COST=0.0001
-   ```
-
-## 5. React Application
-
-### 5.1 Project Structure
-
-The React application is structured as follows:
+The final React application will be structured as follows:
 
 ```rust
     client/
@@ -310,7 +298,23 @@ The React application is structured as follows:
     └── package.json
 ```
 
-### 5.2 Main Components
+### 4.2 Setting Up the React Project
+
+1. In the `guess_who_zkp` directory, create a new React app:
+   ```bash
+    npx create-react-app client
+    cd client
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv
+   ```
+
+2. Create a `.env` file in the `client` directory with the following content:
+   ```
+    REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
+    REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
+    REACT_APP_GAME_COST=0.0001
+   ```
+
+### 4.3 Main Components
 
 Here are the main React components of the application:
 
@@ -868,7 +872,7 @@ Here are the main React components of the application:
    export default ErrorMessage;
 ```
 
-### 5.3 Utility Functions
+### 4.4 Utility Functions
 
 The application uses two main utility files:
 
@@ -1069,7 +1073,7 @@ The application uses two main utility files:
    };
 ```
 
-### 5.4 Styling
+### 4.5 Styling
 
 1. **App.css**: The application's basic styling.
 
@@ -1153,7 +1157,7 @@ The application uses two main utility files:
    }
 ```
 
-## 6. Running the Application
+## 5. Running the Application
 
 To run your application:
 
