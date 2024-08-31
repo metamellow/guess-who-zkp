@@ -4,11 +4,11 @@ Hi frens! Please consider supporting me by following my socials:
 
 [<ytb> Youtube </ytb>][YTB]
 
-[YTB]: [YTB](https://m.youtube.com/@cryptocoffeechats)
+[YTB]: https://m.youtube.com/@cryptocoffeechats
 
-[<kbd> Twitter </kbd>][KBD]
+[<twt> Twitter </twt>][TWT]
 
-[KBD]: https://m.youtube.com/@cryptocoffeechats
+[TWT]: https://x.com/mellowmeta
 
 
 ## Table of Contents
