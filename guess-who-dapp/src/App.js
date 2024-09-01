@@ -17,8 +17,13 @@ import CreateGame from './components/CreateGame';
 import JoinGame from './components/JoinGame';
 import GameBoard from './components/GameBoard';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorMessage from './components/ErrorMessage';
+=======
+import WalletConnectionButton from './components/WalletConnectionButton';
+import PlayerBalance from './components/PlayerBalance';
+>>>>>>> parent of 244201a (wallet connect streamlined)
 =======
 import WalletConnectionButton from './components/WalletConnectionButton';
 import PlayerBalance from './components/PlayerBalance';
@@ -65,6 +70,7 @@ function App() {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <ErrorBoundary>
       <WalletProvider
         wallets={wallets}
@@ -89,6 +95,8 @@ function App() {
       </WalletProvider>
     </ErrorBoundary>
 =======
+=======
+>>>>>>> parent of 244201a (wallet connect streamlined)
     <WalletProvider wallets={wallets} autoConnect>
       <WalletModalProvider>
         <Router>
@@ -105,6 +113,9 @@ function App() {
         </Router>
       </WalletModalProvider>
     </WalletProvider>
+<<<<<<< HEAD
+>>>>>>> parent of 244201a (wallet connect streamlined)
+=======
 >>>>>>> parent of 244201a (wallet connect streamlined)
   );
 }
