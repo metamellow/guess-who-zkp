@@ -1,114 +1,181 @@
-// aleoUtils.js
-import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
+import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 
-export const useAleoWallet = () => {
-  const { publicKey, requestTransaction, requestRecords } = useWallet();
+const NETWORK = WalletAdapterNetwork.Testnet;
+const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
+const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 
-  const createGame = async (character) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const inputs = [
-      publicKey.toString(),
-      JSON.stringify(character)
-    ];
+export const getPlayerBalance = async (publicKey, wallet) => {
+  if (!wallet || !publicKey) {
+    console.error("Wallet or public key not available");
+    return null;
+  }
+  
+  try {
+    const result = await wallet.requestRecords({
+      program: PROGRAM_NAME,
+      filter: {
+        key: 'player_balances',
+        value: publicKey.toString()
+      }
+    });
 
-    const fee = Number(process.env.REACT_APP_GAME_COST);
+    return result[0] ? result[0].value : 0;
+  } catch (error) {
+    console.error("Error fetching player balance:", error);
+    return null;
+  }
+};
 
-    const transaction = await requestTransaction({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+export const createGame = async (wallet, character) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  const inputs = [
+    wallet.publicKey,
+    JSON.stringify(character)
+  ];
+
+  const fee = process.env.REACT_APP_GAME_COST; // From .env file
+
+  try {
+    const transaction = await wallet.requestTransaction({
+      program: PROGRAM_NAME,
       function: 'create_game',
       inputs,
       fee
     });
 
     return transaction;
-  };
+  } catch (error) {
+    console.error("Error creating game:", error);
+    return null;
+  }
+};
 
-  const joinGame = async (gameId, character) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const inputs = [
-      gameId,
-      publicKey.toString(),
-      JSON.stringify(character)
-    ];
+export const joinGame = async (wallet, gameId, character) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  const inputs = [
+    gameId,
+    wallet.publicKey,
+    JSON.stringify(character)
+  ];
 
-    const fee = Number(process.env.REACT_APP_GAME_COST);
+  const fee = process.env.REACT_APP_GAME_COST; // From .env file
 
-    const transaction = await requestTransaction({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+  try {
+    const transaction = await wallet.requestTransaction({
+      program: PROGRAM_NAME,
       function: 'join_game',
       inputs,
       fee
     });
 
     return transaction;
-  };
+  } catch (error) {
+    console.error("Error joining game:", error);
+    return null;
+  }
+};
 
-  const askQuestion = async (gameId, questionType, questionValue) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const inputs = [
-      gameId,
-      publicKey.toString(),
-      questionType,
-      questionValue
-    ];
+export const askQuestion = async (wallet, gameId, questionType, questionValue) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  const inputs = [
+    gameId,
+    wallet.publicKey,
+    questionType,
+    questionValue
+  ];
 
-    const fee = 0.1; // 0.1 Aleo credits
+  const fee = 0.0001; // 0.0001 Aleo
 
-    const transaction = await requestTransaction({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+  try {
+    const transaction = await wallet.requestTransaction({
+      program: PROGRAM_NAME,
       function: 'ask_question',
       inputs,
       fee
     });
 
     return transaction;
-  };
+  } catch (error) {
+    console.error("Error asking question:", error);
+    return null;
+  }
+};
 
-  const claimReward = async (gameId) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const inputs = [
-      gameId,
-      publicKey.toString()
-    ];
+export const claimReward = async (wallet, gameId) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  const inputs = [
+    gameId,
+    wallet.publicKey
+  ];
 
-    const fee = 0.1; // 0.1 Aleo credits
+  const fee = 0.0001; // 0.0001 Aleo
 
-    const transaction = await requestTransaction({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+  try {
+    const transaction = await wallet.requestTransaction({
+      program: PROGRAM_NAME,
       function: 'claim_reward',
       inputs,
       fee
     });
 
     return transaction;
-  };
+  } catch (error) {
+    console.error("Error claiming reward:", error);
+    return null;
+  }
+};
 
-  const endGame = async (gameId) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const inputs = [gameId];
+export const endGame = async (wallet, gameId) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  const inputs = [gameId];
 
-    const fee = 0.1; // 0.1 Aleo credits
+  const fee = 0.0001; // 0.0001 Aleo
 
-    const transaction = await requestTransaction({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+  try {
+    const transaction = await wallet.requestTransaction({
+      program: PROGRAM_NAME,
       function: 'end_game',
       inputs,
       fee
     });
 
     return transaction;
-  };
+  } catch (error) {
+    console.error("Error ending game:", error);
+    return null;
+  }
+};
 
-  const getGameState = async (gameId) => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const result = await requestRecords({
-      program: process.env.REACT_APP_PROGRAM_NAME,
+export const getGameState = async (wallet, gameId) => {
+  if (!wallet) {
+    console.error("Wallet not available");
+    return null;
+  }
+  
+  try {
+    const result = await wallet.requestRecords({
+      program: PROGRAM_NAME,
       filter: {
         key: 'games',
         value: gameId
@@ -116,29 +183,8 @@ export const useAleoWallet = () => {
     });
 
     return result[0];
-  };
-
-  const getPlayerBalance = async () => {
-    if (!publicKey) throw new Error("Wallet not connected");
-    
-    const result = await requestRecords({
-      program: process.env.REACT_APP_PROGRAM_NAME,
-      filter: {
-        key: 'player_balances',
-        value: publicKey.toString()
-      }
-    });
-
-    return result[0];
-  };
-
-  return {
-    createGame,
-    joinGame,
-    askQuestion,
-    claimReward,
-    endGame,
-    getGameState,
-    getPlayerBalance,
-  };
+  } catch (error) {
+    console.error("Error fetching game state:", error);
+    return null;
+  }
 };

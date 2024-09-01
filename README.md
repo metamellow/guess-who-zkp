@@ -284,7 +284,7 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
    ```bash
     npx create-react-app guess-who-dapp
     cd guess-who-dapp
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo dotenv @demox-labs/aleo-wallet-adapter-reactui react-router-dom@6 @demox-labs/aleo-wallet-adapter-base
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv @demox-labs/aleo-wallet-adapter-reactui react-router-dom@6 @demox-labs/aleo-wallet-adapter-base
    ```
 
 2. Create a `.env` file in the `guess-who-dapp` directory with the following content:
@@ -306,6 +306,7 @@ The final React application will be structured as follows:
     │   ├── components/
     │   │   ├── CreateGame.js
     │   │   ├── ErrorMessage.js
+    │   │   ├── ErrorBoundary.js
     │   │   ├── GameBoard.js
     │   │   ├── Home.js
     │   │   ├── JoinGame.js
@@ -330,18 +331,17 @@ Here are the main React components of the application:
 1. **App.js**: The main component that sets up routing and wallet connection.
 
 ```javascript
-   import React from 'react';
+   import React, { useMemo } from 'react';
    import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
    import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-   import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
+   import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
    import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-   import { useMemo } from 'react';
 
    import Home from './components/Home';
    import CreateGame from './components/CreateGame';
    import JoinGame from './components/JoinGame';
    import GameBoard from './components/GameBoard';
-   import WalletConnectionButton from './components/WalletConnectionButton';
+   import ErrorBoundary from './components/ErrorBoundary';
 
    import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
    import './styles/App.css';
@@ -357,21 +357,30 @@ Here are the main React components of the application:
    );
 
    return (
-      <WalletProvider wallets={wallets} autoConnect>
+      <ErrorBoundary>
+         <WalletProvider 
+         wallets={wallets} 
+         autoConnect={true}
+         onError={(error) => {
+            console.error('Wallet error:', error);
+            // You can add more error handling here if needed
+         }}
+         >
          <WalletModalProvider>
-         <Router>
-            <div className="App">
-               <WalletConnectionButton />
+            <Router>
+               <div className="App">
+               <WalletMultiButton />
                <Routes>
-               <Route path="/" element={<Home />} />
-               <Route path="/create" element={<CreateGame />} />
-               <Route path="/join" element={<JoinGame />} />
-               <Route path="/game/:id" element={<GameBoard />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/create" element={<CreateGame />} />
+                  <Route path="/join" element={<JoinGame />} />
+                  <Route path="/game/:id" element={<GameBoard />} />
                </Routes>
-            </div>
-         </Router>
+               </div>
+            </Router>
          </WalletModalProvider>
-      </WalletProvider>
+         </WalletProvider>
+      </ErrorBoundary>
    );
    }
 
@@ -428,7 +437,7 @@ Here are the main React components of the application:
    const [selectedCharacter, setSelectedCharacter] = useState(null);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
-   const { publicKey } = useWallet();
+   const { publicKey, wallet } = useWallet();
    const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
@@ -457,7 +466,7 @@ Here are the main React components of the application:
          gender: selectedCharacter.attributes.gender,
          };
 
-         const result = await createGame(character);
+         const result = await createGame(wallet, character);
          console.log("Game created:", result);
          navigate(`/game/${result.gameId}`);
       } catch (error) {
@@ -515,7 +524,7 @@ Here are the main React components of the application:
    const [selectedCharacter, setSelectedCharacter] = useState(null);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
-   const { publicKey } = useWallet();
+   const { publicKey, wallet } = useWallet();
    const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
@@ -544,7 +553,7 @@ Here are the main React components of the application:
          gender: selectedCharacter.attributes.gender,
          };
 
-         const result = await joinGame(gameId, character);
+         const result = await joinGame(wallet, gameId, character);
          console.log("Joined game:", result);
          navigate(`/game/${gameId}`);
       } catch (error) {
@@ -626,7 +635,7 @@ Here are the main React components of the application:
    const [eliminatedCharacters, setEliminatedCharacters] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
-   const { publicKey } = useWallet();
+   const { publicKey, wallet } = useWallet();
 
    useEffect(() => {
       fetchGameState();
@@ -637,7 +646,7 @@ Here are the main React components of the application:
    const fetchGameState = async () => {
       try {
          setLoading(true);
-         const state = await getGameState(gameId);
+         const state = await getGameState(wallet, gameId);
          setGameState(state);
       } catch (error) {
          console.error("Error fetching game state:", error);
@@ -651,7 +660,7 @@ Here are the main React components of the application:
       if (!selectedQuestionType || !selectedQuestionValue) return;
       try {
          setLoading(true);
-         const result = await askQuestion(gameId, selectedQuestionType, selectedQuestionValue);
+         const result = await askQuestion(wallet, gameId, selectedQuestionType, selectedQuestionValue);
          console.log("Question asked:", result);
          await fetchGameState();
          eliminateCharacters(selectedQuestionType, selectedQuestionValue, result.answer);
@@ -666,7 +675,7 @@ Here are the main React components of the application:
    const handleClaimReward = async () => {
       try {
          setLoading(true);
-         const result = await claimReward(gameId);
+         const result = await claimReward(wallet, gameId);
          console.log("Reward claimed:", result);
          alert("Reward claimed successfully!");
          await fetchGameState();
@@ -681,7 +690,7 @@ Here are the main React components of the application:
    const handleEndGame = async () => {
       try {
          setLoading(true);
-         const result = await endGame(gameId);
+         const result = await endGame(wallet, gameId);
          console.log("Game ended:", result);
          alert("Game ended successfully!");
          await fetchGameState();
@@ -790,17 +799,71 @@ Here are the main React components of the application:
 6. **WalletConnectionButton.js**: Component for connecting the Aleo wallet.
 
 ```javascript
-   import React from 'react';
+   import React, { useState, useEffect } from 'react';
    import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-   import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
+   import { WalletNotSelectedError } from '@demox-labs/aleo-wallet-adapter-base';
+   import ErrorMessage from './ErrorMessage';
 
    function WalletConnectionButton() {
-   const { publicKey } = useWallet();
+   const { publicKey, wallet, connected, connecting, connect, disconnect } = useWallet();
+   const [error, setError] = useState(null);
+
+   useEffect(() => {
+      const checkWalletStatus = async () => {
+         if (wallet && !connected && !connecting) {
+         try {
+            setError(null);
+            await connect();
+         } catch (err) {
+            console.error("Wallet connection error:", err);
+            if (err instanceof WalletNotSelectedError) {
+               setError("Please select a wallet to connect.");
+            } else {
+               setError("Please unlock your Leo wallet and try again.");
+            }
+         }
+         }
+      };
+
+      checkWalletStatus();
+   }, [wallet, connected, connecting, connect]);
+
+   const handleConnect = async () => {
+      try {
+         setError(null);
+         await connect();
+      } catch (err) {
+         console.error("Wallet connection error:", err);
+         if (err instanceof WalletNotSelectedError) {
+         setError("Please select a wallet to connect.");
+         } else {
+         setError("Failed to connect. Please ensure your Leo wallet is unlocked and try again.");
+         }
+      }
+   };
+
+   const handleDisconnect = async () => {
+      try {
+         await disconnect();
+      } catch (err) {
+         console.error("Wallet disconnection error:", err);
+         setError("Failed to disconnect. Please try again.");
+      }
+   };
 
    return (
       <div className="wallet-connection">
-         <WalletMultiButton />
-         {publicKey && <p>Connected: {publicKey.toString()}</p>}
+         {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
+         {connecting ? (
+         <p>Connecting...</p>
+         ) : connected && publicKey ? (
+         <div>
+            <p>Connected: {publicKey.toString()}</p>
+            <button onClick={handleDisconnect}>Disconnect</button>
+         </div>
+         ) : (
+         <button onClick={handleConnect}>Connect Wallet</button>
+         )}
       </div>
    );
    }
@@ -817,22 +880,22 @@ Here are the main React components of the application:
 
    function PlayerBalance() {
    const [balance, setBalance] = useState(null);
-   const { publicKey } = useWallet();
+   const { publicKey, wallet } = useWallet();
 
    useEffect(() => {
-      if (publicKey) {
-         fetchBalance();
-      }
-   }, [publicKey]);
+      const fetchBalance = async () => {
+         if (publicKey && wallet) {
+         try {
+            const playerBalance = await getPlayerBalance(publicKey, wallet);
+            setBalance(playerBalance);
+         } catch (error) {
+            console.error("Error fetching player balance:", error);
+         }
+         }
+      };
 
-   const fetchBalance = async () => {
-      try {
-         const playerBalance = await getPlayerBalance(publicKey);
-         setBalance(playerBalance);
-      } catch (error) {
-         console.error("Error fetching player balance:", error);
-      }
-   };
+      fetchBalance();
+   }, [publicKey, wallet]);
 
    if (!publicKey) return null;
 
@@ -868,17 +931,65 @@ Here are the main React components of the application:
 9. **ErrorMessage.js**: A reusable error message component.
 
 ```javascript
-   import React from 'react';
+   import React, { useState } from 'react';
 
-   function ErrorMessage({ message }) {
+   function ErrorMessage({ message, onDismiss }) {
+   const [isVisible, setIsVisible] = useState(true);
+
+   const handleDismiss = () => {
+      setIsVisible(false);
+      if (onDismiss) {
+         onDismiss();
+      }
+   };
+
+   if (!isVisible) {
+      return null;
+   }
+
    return (
       <div className="error-message">
          <p>{message}</p>
+         <button onClick={handleDismiss} className="error-dismiss-button">
+         &times;
+         </button>
       </div>
    );
    }
 
    export default ErrorMessage;
+```
+
+10. **ErrorBoundary.js**: A reusable error boundary component.
+
+```javascript
+   import React from 'react';
+   import ErrorMessage from './ErrorMessage';
+
+   class ErrorBoundary extends React.Component {
+   constructor(props) {
+      super(props);
+      this.state = { hasError: false, error: null };
+   }
+
+   static getDerivedStateFromError(error) {
+      return { hasError: true, error: error.message };
+   }
+
+   componentDidCatch(error, errorInfo) {
+      console.error("Uncaught error:", error, errorInfo);
+   }
+
+   render() {
+      if (this.state.hasError) {
+         return <ErrorMessage message={`Something went wrong: ${this.state.error}. Please refresh the page and try again.`} />;
+      }
+
+      return this.props.children;
+   }
+   }
+
+   export default ErrorBoundary;
 ```
 
 ### 4.4 Utility Functions
@@ -895,15 +1006,33 @@ The application uses two main utility files:
    const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
    const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 
-   let wallet = null;
+   export const getPlayerBalance = async (publicKey, wallet) => {
+   if (!wallet || !publicKey) {
+      console.error("Wallet or public key not available");
+      return null;
+   }
+   
+   try {
+      const result = await wallet.requestRecords({
+         program: PROGRAM_NAME,
+         filter: {
+         key: 'player_balances',
+         value: publicKey.toString()
+         }
+      });
 
-   export const initializeWallet = async () => {
-   wallet = new LeoWalletAdapter({ appName: 'Guess Who ZKP' });
-   await wallet.connect();
+      return result[0] ? result[0].value : 0;
+   } catch (error) {
+      console.error("Error fetching player balance:", error);
+      return null;
+   }
    };
 
-   export const createGame = async (character) => {
-   if (!wallet) await initializeWallet();
+   export const createGame = async (wallet, character) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
    const inputs = [
       wallet.publicKey,
@@ -912,18 +1041,26 @@ The application uses two main utility files:
 
    const fee = process.env.REACT_APP_GAME_COST; // From .env file
 
-   const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'create_game',
-      inputs,
-      fee
-   });
+   try {
+      const transaction = await wallet.requestTransaction({
+         program: PROGRAM_NAME,
+         function: 'create_game',
+         inputs,
+         fee
+      });
 
-   return transaction;
+      return transaction;
+   } catch (error) {
+      console.error("Error creating game:", error);
+      return null;
+   }
    };
 
-   export const joinGame = async (gameId, character) => {
-   if (!wallet) await initializeWallet();
+   export const joinGame = async (wallet, gameId, character) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
    const inputs = [
       gameId,
@@ -933,18 +1070,26 @@ The application uses two main utility files:
 
    const fee = process.env.REACT_APP_GAME_COST; // From .env file
 
-   const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'join_game',
-      inputs,
-      fee
-   });
+   try {
+      const transaction = await wallet.requestTransaction({
+         program: PROGRAM_NAME,
+         function: 'join_game',
+         inputs,
+         fee
+      });
 
-   return transaction;
+      return transaction;
+   } catch (error) {
+      console.error("Error joining game:", error);
+      return null;
+   }
    };
 
-   export const askQuestion = async (gameId, questionType, questionValue) => {
-   if (!wallet) await initializeWallet();
+   export const askQuestion = async (wallet, gameId, questionType, questionValue) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
    const inputs = [
       gameId,
@@ -955,18 +1100,26 @@ The application uses two main utility files:
 
    const fee = 0.0001; // 0.0001 Aleo
 
-   const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'ask_question',
-      inputs,
-      fee
-   });
+   try {
+      const transaction = await wallet.requestTransaction({
+         program: PROGRAM_NAME,
+         function: 'ask_question',
+         inputs,
+         fee
+      });
 
-   return transaction;
+      return transaction;
+   } catch (error) {
+      console.error("Error asking question:", error);
+      return null;
+   }
    };
 
-   export const claimReward = async (gameId) => {
-   if (!wallet) await initializeWallet();
+   export const claimReward = async (wallet, gameId) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
    const inputs = [
       gameId,
@@ -975,59 +1128,66 @@ The application uses two main utility files:
 
    const fee = 0.0001; // 0.0001 Aleo
 
-   const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'claim_reward',
-      inputs,
-      fee
-   });
+   try {
+      const transaction = await wallet.requestTransaction({
+         program: PROGRAM_NAME,
+         function: 'claim_reward',
+         inputs,
+         fee
+      });
 
-   return transaction;
+      return transaction;
+   } catch (error) {
+      console.error("Error claiming reward:", error);
+      return null;
+   }
    };
 
-   export const endGame = async (gameId) => {
-   if (!wallet) await initializeWallet();
+   export const endGame = async (wallet, gameId) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
    const inputs = [gameId];
 
    const fee = 0.0001; // 0.0001 Aleo
 
-   const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'end_game',
-      inputs,
-      fee
-   });
+   try {
+      const transaction = await wallet.requestTransaction({
+         program: PROGRAM_NAME,
+         function: 'end_game',
+         inputs,
+         fee
+      });
 
-   return transaction;
+      return transaction;
+   } catch (error) {
+      console.error("Error ending game:", error);
+      return null;
+   }
    };
 
-   export const getGameState = async (gameId) => {
-   if (!wallet) await initializeWallet();
+   export const getGameState = async (wallet, gameId) => {
+   if (!wallet) {
+      console.error("Wallet not available");
+      return null;
+   }
    
-   const result = await wallet.requestRecords({
-      program: PROGRAM_NAME,
-      filter: {
+   try {
+      const result = await wallet.requestRecords({
+         program: PROGRAM_NAME,
+         filter: {
          key: 'games',
          value: gameId
-      }
-   });
+         }
+      });
 
-   return result[0];
-   };
-
-   export const getPlayerBalance = async (address) => {
-   if (!wallet) await initializeWallet();
-   
-   const result = await wallet.requestRecords({
-      program: PROGRAM_NAME,
-      filter: {
-         key: 'player_balances',
-         value: address
-      }
-   });
-
-   return result[0];
+      return result[0];
+   } catch (error) {
+      console.error("Error fetching game state:", error);
+      return null;
+   }
    };
 ```
 
@@ -1163,6 +1323,33 @@ The application uses two main utility files:
    .player-balance {
    margin-top: 20px;
    font-weight: bold;
+   }
+
+   .error-message {
+   background-color: #ffcccc;
+   color: #cc0000;
+   padding: 10px;
+   margin: 10px 0;
+   border-radius: 5px;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   }
+
+   .error-message p {
+   margin: 0;
+   }
+
+   .error-dismiss-button {
+   background: none;
+   border: none;
+   color: #cc0000;
+   cursor: pointer;
+   font-size: 1.2em;
+   }
+
+   .error-dismiss-button:hover {
+   color: #990000;
    }
 ```
 

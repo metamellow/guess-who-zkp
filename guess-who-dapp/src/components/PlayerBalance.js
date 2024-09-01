@@ -1,35 +1,32 @@
-// PlayerBalance.js
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-import { useAleoWallet } from '../utils/aleoUtils';
+import { getPlayerBalance } from '../utils/aleoUtils';
 
 function PlayerBalance() {
   const [balance, setBalance] = useState(null);
-  const { publicKey } = useWallet();
-  const { getPlayerBalance } = useAleoWallet();
+  const { publicKey, wallet } = useWallet();
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (publicKey) {
+      if (publicKey && wallet) {
         try {
-          const playerBalance = await getPlayerBalance();
+          const playerBalance = await getPlayerBalance(publicKey, wallet);
           setBalance(playerBalance);
         } catch (error) {
           console.error("Error fetching player balance:", error);
-          setBalance("Error");
         }
       }
     };
 
     fetchBalance();
-  }, [publicKey, getPlayerBalance]);
+  }, [publicKey, wallet]);
 
   if (!publicKey) return null;
 
   return (
     <div className="player-balance">
       <h3>Your Balance</h3>
-      <p>{balance !== null ? `${balance} Aleo` : 'Loading...'}</p>
+      <p>{balance !== null ? `${balance / 1_000_000} Aleo` : 'Loading...'}</p>
     </div>
   );
 }

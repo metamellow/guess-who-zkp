@@ -1,9 +1,8 @@
-// CreateGame.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { characters } from '../utils/characterData';
-import { useAleoWallet } from '../utils/aleoUtils';
+import { createGame } from '../utils/aleoUtils';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
@@ -11,8 +10,7 @@ function CreateGame() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { publicKey } = useWallet();
-  const { createGame } = useAleoWallet();
+  const { publicKey, wallet } = useWallet();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -41,9 +39,9 @@ function CreateGame() {
         gender: selectedCharacter.attributes.gender,
       };
 
-      const result = await createGame(character);
+      const result = await createGame(wallet, character);
       console.log("Game created:", result);
-      navigate(`/game/${result}`);
+      navigate(`/game/${result.gameId}`);
     } catch (error) {
       console.error("Error creating game:", error);
       setError("Failed to create game. Please try again.");

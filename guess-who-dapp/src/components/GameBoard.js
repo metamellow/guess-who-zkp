@@ -1,13 +1,11 @@
-// GameBoard.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { characters, getCharacterById, attributeToIndex, indexToAttribute } from '../utils/characterData';
-import { useAleoWallet } from '../utils/aleoUtils';
+import { getGameState, askQuestion, claimReward, endGame } from '../utils/aleoUtils';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
-// Define questionTypes
 const questionTypes = [
   {id: 1, name: "Hair Color"},
   {id: 2, name: "Eye Color"},
@@ -26,19 +24,18 @@ function GameBoard() {
   const [eliminatedCharacters, setEliminatedCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { publicKey } = useWallet();
-  const { getGameState, askQuestion, claimReward, endGame } = useAleoWallet();
+  const { publicKey, wallet } = useWallet();
 
   useEffect(() => {
     fetchGameState();
     const interval = setInterval(fetchGameState, 10000); // Fetch every 10 seconds
     return () => clearInterval(interval);
-  }, [gameId, getGameState]);
+  }, [gameId]);
 
   const fetchGameState = async () => {
     try {
       setLoading(true);
-      const state = await getGameState(gameId);
+      const state = await getGameState(wallet, gameId);
       setGameState(state);
     } catch (error) {
       console.error("Error fetching game state:", error);
@@ -52,7 +49,7 @@ function GameBoard() {
     if (!selectedQuestionType || !selectedQuestionValue) return;
     try {
       setLoading(true);
-      const result = await askQuestion(gameId, selectedQuestionType, selectedQuestionValue);
+      const result = await askQuestion(wallet, gameId, selectedQuestionType, selectedQuestionValue);
       console.log("Question asked:", result);
       await fetchGameState();
       eliminateCharacters(selectedQuestionType, selectedQuestionValue, result.answer);
@@ -67,7 +64,7 @@ function GameBoard() {
   const handleClaimReward = async () => {
     try {
       setLoading(true);
-      const result = await claimReward(gameId);
+      const result = await claimReward(wallet, gameId);
       console.log("Reward claimed:", result);
       alert("Reward claimed successfully!");
       await fetchGameState();
@@ -82,7 +79,7 @@ function GameBoard() {
   const handleEndGame = async () => {
     try {
       setLoading(true);
-      const result = await endGame(gameId);
+      const result = await endGame(wallet, gameId);
       console.log("Game ended:", result);
       alert("Game ended successfully!");
       await fetchGameState();
