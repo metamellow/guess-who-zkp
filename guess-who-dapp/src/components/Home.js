@@ -1,29 +1,30 @@
+// Home.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import PlayerBalance from './PlayerBalance';
 
 function Home() {
-const { publicKey } = useWallet();
+  const { publicKey } = useWallet();
 
-return (
-   <div className="home">
+  return (
+    <div className="home">
       <h1>Welcome to Guess Who ZKP</h1>
       {publicKey ? (
-      <div>
-         <Link to="/create">
+        <div>
+          <Link to="/create">
             <button>Create Game</button>
-         </Link>
-         <Link to="/join">
+          </Link>
+          <Link to="/join">
             <button>Join Game</button>
-         </Link>
-         <PlayerBalance />
-      </div>
+          </Link>
+          <PlayerBalance />
+        </div>
       ) : (
-      <p>Please connect your wallet to play.</p>
+        <p>Please connect your wallet to play.</p>
       )}
-   </div>
-);
+    </div>
+  );
 }
 
 export default Home;

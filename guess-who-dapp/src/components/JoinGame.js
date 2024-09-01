@@ -1,8 +1,9 @@
+// JoinGame.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { characters } from '../utils/characterData';
-import { joinGame } from '../utils/aleoUtils';
+import { useAleoWallet } from '../utils/aleoUtils';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
@@ -12,6 +13,7 @@ function JoinGame() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { publicKey } = useWallet();
+  const { joinGame } = useAleoWallet();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {

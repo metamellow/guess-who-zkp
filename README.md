@@ -284,7 +284,7 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
    ```bash
     npx create-react-app guess-who-dapp
     cd guess-who-dapp
-    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo react-router-dom dotenv @demox-labs/aleo-wallet-adapter-reactui react-router-dom@6
+    npm install @demox-labs/aleo-wallet-adapter-react @demox-labs/aleo-wallet-adapter-leo dotenv @demox-labs/aleo-wallet-adapter-reactui react-router-dom@6 @demox-labs/aleo-wallet-adapter-base
    ```
 
 2. Create a `.env` file in the `guess-who-dapp` directory with the following content:
@@ -1307,7 +1307,7 @@ The application uses two main utility files:
 
 1. Create a new folder in the `guess-who-dapp/public/` directory called `character-images`.
 
-2. Upload all 24 of [the images found here](https://github.com/metamellow/guess-who-zkp/tree/main/guess-who-dapp/character-images) into that folder.
+2. Upload all 24 of [the images found here](https://github.com/metamellow/guess-who-zkp/tree/main/guess-who-dapp/public/character-images) into that folder.
 
 ## 5. Running the Application
 
