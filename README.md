@@ -1,14 +1,11 @@
 # Guess Who ZKP: A Zero-Knowledge Proof Game
 
-Hi frens! Please consider supporting me by following my socials:
+Hi frens! Please consider following my Youtube channel:
 
-[<ytb> Youtube </ytb>][YTB]
+[<kbd> Youtube </kbd>][KBD]
 
-[YTB]: https://m.youtube.com/@cryptocoffeechats
+[KBD]: https://m.youtube.com/@cryptocoffeechats
 
-[<twt> Twitter </twt>][TWT]
-
-[TWT]: https://x.com/mellowmeta
 
 
 ## Table of Contents
@@ -54,19 +51,7 @@ Before you begin, ensure you have the following installed:
 
 To check, open a terminal and run the following commands:
 ```bash
-   mkdir guess_who_zkp
-   cd guess_who_zkp
-   leo new guess_who_zkp
-
-
-
-
-
-
-
-
-
-.
+   node -v; npm -v; leo -V; git --version
 ```
 
 ## 3. Aleo Leo Setup
