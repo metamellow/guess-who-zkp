@@ -306,7 +306,6 @@ The final React application will be structured as follows:
     │   ├── components/
     │   │   ├── CreateGame.js
     │   │   ├── ErrorMessage.js
-    │   │   ├── ErrorBoundary.js
     │   │   ├── GameBoard.js
     │   │   ├── Home.js
     │   │   ├── JoinGame.js
@@ -331,17 +330,18 @@ Here are the main React components of the application:
 1. **App.js**: The main component that sets up routing and wallet connection.
 
 ```javascript
-   import React, { useMemo } from 'react';
+   import React from 'react';
    import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
    import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-   import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
+   import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
    import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
+   import { useMemo } from 'react';
 
    import Home from './components/Home';
    import CreateGame from './components/CreateGame';
    import JoinGame from './components/JoinGame';
    import GameBoard from './components/GameBoard';
-   import ErrorBoundary from './components/ErrorBoundary';
+   import WalletConnectionButton from './components/WalletConnectionButton';
 
    import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
    import './styles/App.css';
@@ -357,29 +357,21 @@ Here are the main React components of the application:
    );
 
    return (
-      <ErrorBoundary>
-         <WalletProvider 
-         wallets={wallets} 
-         autoConnect={true}
-         onError={(error) => {
-            console.error('Wallet error:', error);
-         }}
-         >
+      <WalletProvider wallets={wallets} autoConnect>
          <WalletModalProvider>
-            <Router>
-               <div className="App">
-               <WalletMultiButton />
+         <Router>
+            <div className="App">
+               <WalletConnectionButton />
                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/create" element={<CreateGame />} />
-                  <Route path="/join" element={<JoinGame />} />
-                  <Route path="/game/:id" element={<GameBoard />} />
+               <Route path="/" element={<Home />} />
+               <Route path="/create" element={<CreateGame />} />
+               <Route path="/join" element={<JoinGame />} />
+               <Route path="/game/:id" element={<GameBoard />} />
                </Routes>
-               </div>
-            </Router>
+            </div>
+         </Router>
          </WalletModalProvider>
-         </WalletProvider>
-      </ErrorBoundary>
+      </WalletProvider>
    );
    }
 
@@ -798,71 +790,17 @@ Here are the main React components of the application:
 6. **WalletConnectionButton.js**: Component for connecting the Aleo wallet.
 
 ```javascript
-   import React, { useState, useEffect } from 'react';
+   import React from 'react';
    import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-   import { WalletNotSelectedError } from '@demox-labs/aleo-wallet-adapter-base';
-   import ErrorMessage from './ErrorMessage';
+   import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
 
    function WalletConnectionButton() {
-   const { publicKey, wallet, connected, connecting, connect, disconnect } = useWallet();
-   const [error, setError] = useState(null);
-
-   useEffect(() => {
-      const checkWalletStatus = async () => {
-         if (wallet && !connected && !connecting) {
-         try {
-            setError(null);
-            await connect();
-         } catch (err) {
-            console.error("Wallet connection error:", err);
-            if (err instanceof WalletNotSelectedError) {
-               setError("Please select a wallet to connect.");
-            } else {
-               setError("Please unlock your Leo wallet and try again.");
-            }
-         }
-         }
-      };
-
-      checkWalletStatus();
-   }, [wallet, connected, connecting, connect]);
-
-   const handleConnect = async () => {
-      try {
-         setError(null);
-         await connect();
-      } catch (err) {
-         console.error("Wallet connection error:", err);
-         if (err instanceof WalletNotSelectedError) {
-         setError("Please select a wallet to connect.");
-         } else {
-         setError("Failed to connect. Please ensure your Leo wallet is unlocked and try again.");
-         }
-      }
-   };
-
-   const handleDisconnect = async () => {
-      try {
-         await disconnect();
-      } catch (err) {
-         console.error("Wallet disconnection error:", err);
-         setError("Failed to disconnect. Please try again.");
-      }
-   };
+   const { publicKey } = useWallet();
 
    return (
       <div className="wallet-connection">
-         {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
-         {connecting ? (
-         <p>Connecting...</p>
-         ) : connected && publicKey ? (
-         <div>
-            <p>Connected: {publicKey.toString()}</p>
-            <button onClick={handleDisconnect}>Disconnect</button>
-         </div>
-         ) : (
-         <button onClick={handleConnect}>Connect Wallet</button>
-         )}
+         <WalletMultiButton />
+         {publicKey && <p>Connected: {publicKey.toString()}</p>}
       </div>
    );
    }
@@ -930,65 +868,17 @@ Here are the main React components of the application:
 9. **ErrorMessage.js**: A reusable error message component.
 
 ```javascript
-   import React, { useState } from 'react';
+   import React from 'react';
 
-   function ErrorMessage({ message, onDismiss }) {
-   const [isVisible, setIsVisible] = useState(true);
-
-   const handleDismiss = () => {
-      setIsVisible(false);
-      if (onDismiss) {
-         onDismiss();
-      }
-   };
-
-   if (!isVisible) {
-      return null;
-   }
-
+   function ErrorMessage({ message }) {
    return (
       <div className="error-message">
          <p>{message}</p>
-         <button onClick={handleDismiss} className="error-dismiss-button">
-         &times;
-         </button>
       </div>
    );
    }
 
    export default ErrorMessage;
-```
-
-10. **ErrorBoundary.js**: A reusable error boundary component.
-
-```javascript
-   import React from 'react';
-   import ErrorMessage from './ErrorMessage';
-
-   class ErrorBoundary extends React.Component {
-   constructor(props) {
-      super(props);
-      this.state = { hasError: false, error: null };
-   }
-
-   static getDerivedStateFromError(error) {
-      return { hasError: true, error: error.message };
-   }
-
-   componentDidCatch(error, errorInfo) {
-      console.error("Uncaught error:", error, errorInfo);
-   }
-
-   render() {
-      if (this.state.hasError) {
-         return <ErrorMessage message={`Something went wrong: ${this.state.error}. Please refresh the page and try again.`} />;
-      }
-
-      return this.props.children;
-   }
-   }
-
-   export default ErrorBoundary;
 ```
 
 ### 4.4 Utility Functions
@@ -1273,33 +1163,6 @@ The application uses two main utility files:
    .player-balance {
    margin-top: 20px;
    font-weight: bold;
-   }
-
-   .error-message {
-   background-color: #ffcccc;
-   color: #cc0000;
-   padding: 10px;
-   margin: 10px 0;
-   border-radius: 5px;
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   }
-
-   .error-message p {
-   margin: 0;
-   }
-
-   .error-dismiss-button {
-   background: none;
-   border: none;
-   color: #cc0000;
-   cursor: pointer;
-   font-size: 1.2em;
-   }
-
-   .error-dismiss-button:hover {
-   color: #990000;
    }
 ```
 
