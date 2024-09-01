@@ -1,26 +1,32 @@
 import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
-import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 
 const NETWORK = WalletAdapterNetwork.Testnet;
 const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
-const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 
-export const getPlayerBalance = async (publicKey, wallet) => {
-  if (!wallet || !publicKey) {
-    console.error("Wallet or public key not available");
+export const getPlayerBalance = async (wallet) => {
+  if (!wallet || !wallet.adapter) {
+    console.error("Wallet or adapter not available");
     return null;
   }
   
   try {
-    const result = await wallet.requestRecords({
-      program: PROGRAM_NAME,
-      filter: {
-        key: 'player_balances',
-        value: publicKey.toString()
+    if (typeof wallet.adapter.requestRecords === 'function') {
+      const records = await wallet.adapter.requestRecords('credits.aleo');
+      
+      let balance = 0;
+      if (Array.isArray(records)) {
+        balance = records.reduce((total, record) => {
+          if (record && record.data && record.data.microcredits) {
+            return total + Number(record.data.microcredits);
+          }
+          return total;
+        }, 0);
       }
-    });
-
-    return result[0] ? result[0].value : 0;
+      return balance;
+    } else {
+      console.error("requestRecords method not available");
+      return null;
+    }
   } catch (error) {
     console.error("Error fetching player balance:", error);
     return null;

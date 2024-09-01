@@ -8,11 +8,17 @@ function WalletConnectionButton() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log("WalletConnectionButton useEffect triggered");
+    console.log("Wallet status:", { connected, connecting, publicKey: publicKey?.toString() });
+
     const checkWalletStatus = async () => {
+      console.log("Checking wallet status");
       if (wallet && !connected && !connecting) {
         try {
           setError(null);
+          console.log("Attempting to connect wallet");
           await connect();
+          console.log("Wallet connected successfully");
         } catch (err) {
           console.error("Wallet connection error:", err);
           if (err instanceof WalletNotSelectedError) {
@@ -25,12 +31,14 @@ function WalletConnectionButton() {
     };
 
     checkWalletStatus();
-  }, [wallet, connected, connecting, connect]);
+  }, [wallet, connected, connecting, connect, publicKey]);
 
   const handleConnect = async () => {
+    console.log("Connect button clicked");
     try {
       setError(null);
       await connect();
+      console.log("Wallet connected successfully");
     } catch (err) {
       console.error("Wallet connection error:", err);
       if (err instanceof WalletNotSelectedError) {
@@ -42,8 +50,10 @@ function WalletConnectionButton() {
   };
 
   const handleDisconnect = async () => {
+    console.log("Disconnect button clicked");
     try {
       await disconnect();
+      console.log("Wallet disconnected successfully");
     } catch (err) {
       console.error("Wallet disconnection error:", err);
       setError("Failed to disconnect. Please try again.");

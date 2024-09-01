@@ -4,29 +4,42 @@ import { getPlayerBalance } from '../utils/aleoUtils';
 
 function PlayerBalance() {
   const [balance, setBalance] = useState(null);
-  const { publicKey, wallet } = useWallet();
+  const [error, setError] = useState(null);
+  const { wallet, publicKey, connected } = useWallet();
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (publicKey && wallet) {
+      if (wallet && connected) {
         try {
-          const playerBalance = await getPlayerBalance(publicKey, wallet);
+          const playerBalance = await getPlayerBalance(wallet);
           setBalance(playerBalance);
+          setError(null);
         } catch (error) {
           console.error("Error fetching player balance:", error);
+          setError("Failed to fetch balance");
         }
       }
     };
 
     fetchBalance();
-  }, [publicKey, wallet]);
+  }, [wallet, connected]);
 
-  if (!publicKey) return null;
+  const formatBalance = (balance) => {
+    if (balance === null) return 'Loading...';
+    const credits = balance / 1_000_000;
+    return `${credits.toFixed(6)} Aleo`;
+  };
 
   return (
     <div className="player-balance">
       <h3>Your Balance</h3>
-      <p>{balance !== null ? `${balance / 1_000_000} Aleo` : 'Loading...'}</p>
+      {error ? (
+        <p>Error: {error}</p>
+      ) : (
+        <p>{formatBalance(balance)}</p>
+      )}
+      <p>Wallet connected: {connected ? 'Yes' : 'No'}</p>
+      <p>Public Key: {publicKey ? publicKey.toString() : 'Not available'}</p>
     </div>
   );
 }

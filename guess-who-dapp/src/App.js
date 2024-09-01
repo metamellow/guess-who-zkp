@@ -23,14 +23,13 @@ function App() {
     []
   );
 
-  return (
+  const appContent = useMemo(() => (
     <ErrorBoundary>
       <WalletProvider 
         wallets={wallets} 
         autoConnect={true}
         onError={(error) => {
           console.error('Wallet error:', error);
-          // You can add more error handling here if needed
         }}
       >
         <WalletModalProvider>
@@ -48,7 +47,11 @@ function App() {
         </WalletModalProvider>
       </WalletProvider>
     </ErrorBoundary>
-  );
+  ), [wallets]);
+
+  console.log("App rendered");
+
+  return appContent;
 }
 
 export default App;

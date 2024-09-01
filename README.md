@@ -33,7 +33,7 @@ Hi frens! Please consider following my Youtube channel:
 
    4.5. [Styling](#45-styling)
 
-   4.6 [Character Images](#46-character-images)
+   4.6 [Other Changes](#46-other-changes)
 
 5. [Running the Application](#5-running-the-application)
 
@@ -356,14 +356,13 @@ Here are the main React components of the application:
       []
    );
 
-   return (
+   const appContent = useMemo(() => (
       <ErrorBoundary>
          <WalletProvider 
          wallets={wallets} 
          autoConnect={true}
          onError={(error) => {
             console.error('Wallet error:', error);
-            // You can add more error handling here if needed
          }}
          >
          <WalletModalProvider>
@@ -381,7 +380,11 @@ Here are the main React components of the application:
          </WalletModalProvider>
          </WalletProvider>
       </ErrorBoundary>
-   );
+   ), [wallets]);
+
+   console.log("App rendered");
+
+   return appContent;
    }
 
    export default App;
@@ -809,11 +812,17 @@ Here are the main React components of the application:
    const [error, setError] = useState(null);
 
    useEffect(() => {
+      console.log("WalletConnectionButton useEffect triggered");
+      console.log("Wallet status:", { connected, connecting, publicKey: publicKey?.toString() });
+
       const checkWalletStatus = async () => {
+         console.log("Checking wallet status");
          if (wallet && !connected && !connecting) {
          try {
             setError(null);
+            console.log("Attempting to connect wallet");
             await connect();
+            console.log("Wallet connected successfully");
          } catch (err) {
             console.error("Wallet connection error:", err);
             if (err instanceof WalletNotSelectedError) {
@@ -826,12 +835,14 @@ Here are the main React components of the application:
       };
 
       checkWalletStatus();
-   }, [wallet, connected, connecting, connect]);
+   }, [wallet, connected, connecting, connect, publicKey]);
 
    const handleConnect = async () => {
+      console.log("Connect button clicked");
       try {
          setError(null);
          await connect();
+         console.log("Wallet connected successfully");
       } catch (err) {
          console.error("Wallet connection error:", err);
          if (err instanceof WalletNotSelectedError) {
@@ -843,8 +854,10 @@ Here are the main React components of the application:
    };
 
    const handleDisconnect = async () => {
+      console.log("Disconnect button clicked");
       try {
          await disconnect();
+         console.log("Wallet disconnected successfully");
       } catch (err) {
          console.error("Wallet disconnection error:", err);
          setError("Failed to disconnect. Please try again.");
@@ -880,29 +893,42 @@ Here are the main React components of the application:
 
    function PlayerBalance() {
    const [balance, setBalance] = useState(null);
-   const { publicKey, wallet } = useWallet();
+   const [error, setError] = useState(null);
+   const { wallet, publicKey, connected } = useWallet();
 
    useEffect(() => {
       const fetchBalance = async () => {
-         if (publicKey && wallet) {
+         if (wallet && connected) {
          try {
-            const playerBalance = await getPlayerBalance(publicKey, wallet);
+            const playerBalance = await getPlayerBalance(wallet);
             setBalance(playerBalance);
+            setError(null);
          } catch (error) {
             console.error("Error fetching player balance:", error);
+            setError("Failed to fetch balance");
          }
          }
       };
 
       fetchBalance();
-   }, [publicKey, wallet]);
+   }, [wallet, connected]);
 
-   if (!publicKey) return null;
+   const formatBalance = (balance) => {
+      if (balance === null) return 'Loading...';
+      const credits = balance / 1_000_000;
+      return `${credits.toFixed(6)} Aleo`;
+   };
 
    return (
       <div className="player-balance">
          <h3>Your Balance</h3>
-         <p>{balance !== null ? `${balance / 1_000_000} Aleo` : 'Loading...'}</p>
+         {error ? (
+         <p>Error: {error}</p>
+         ) : (
+         <p>{formatBalance(balance)}</p>
+         )}
+         <p>Wallet connected: {connected ? 'Yes' : 'No'}</p>
+         <p>Public Key: {publicKey ? publicKey.toString() : 'Not available'}</p>
       </div>
    );
    }
@@ -1000,28 +1026,34 @@ The application uses two main utility files:
 
 ```javascript
    import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
-   import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 
    const NETWORK = WalletAdapterNetwork.Testnet;
    const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
-   const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
 
-   export const getPlayerBalance = async (publicKey, wallet) => {
-   if (!wallet || !publicKey) {
-      console.error("Wallet or public key not available");
+   export const getPlayerBalance = async (wallet) => {
+   if (!wallet || !wallet.adapter) {
+      console.error("Wallet or adapter not available");
       return null;
    }
    
    try {
-      const result = await wallet.requestRecords({
-         program: PROGRAM_NAME,
-         filter: {
-         key: 'player_balances',
-         value: publicKey.toString()
+      if (typeof wallet.adapter.requestRecords === 'function') {
+         const records = await wallet.adapter.requestRecords('credits.aleo');
+         
+         let balance = 0;
+         if (Array.isArray(records)) {
+         balance = records.reduce((total, record) => {
+            if (record && record.data && record.data.microcredits) {
+               return total + Number(record.data.microcredits);
+            }
+            return total;
+         }, 0);
          }
-      });
-
-      return result[0] ? result[0].value : 0;
+         return balance;
+      } else {
+         console.error("requestRecords method not available");
+         return null;
+      }
    } catch (error) {
       console.error("Error fetching player balance:", error);
       return null;
@@ -1353,11 +1385,24 @@ The application uses two main utility files:
    }
 ```
 
-### 4.6 Styling
+### 4.6 Other Changes
 
-1. Create a new folder in the `guess-who-dapp/public/` directory called `character-images`.
+1. **Character Images**: The character images used in the game.
 
-2. Upload all 24 of [the images found here](https://github.com/metamellow/guess-who-zkp/tree/main/guess-who-dapp/public/character-images) into that folder.
+- Create a new folder in the `guess-who-dapp/public/` directory called `character-images`.
+
+- Upload all 24 of [the images found here](https://github.com/metamellow/guess-who-zkp/tree/main/guess-who-dapp/public/character-images) into that folder.
+
+2. **index.js**: Change the React process to prevent double rendering.
+
+```javascript
+   import React from 'react';
+   import { createRoot } from 'react-dom/client';
+   import App from './App';
+
+   const root = createRoot(document.getElementById('root'));
+   root.render(<App />);
+```
 
 ## 5. Running the Application
 
