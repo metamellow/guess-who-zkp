@@ -41,7 +41,7 @@ function CreateGame() {
 
       const result = await createGame(wallet, character);
       console.log("Game created:", result);
-      navigate(`/game/${result.gameId}`);
+      navigate(`/game/${result.transactionId()}`);
     } catch (error) {
       console.error("Error creating game:", error);
       setError("Failed to create game. Please try again.");

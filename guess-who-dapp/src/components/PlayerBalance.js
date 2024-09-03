@@ -3,21 +3,16 @@ import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { getPlayerBalance } from '../utils/aleoUtils';
 
 function PlayerBalance() {
-  console.log("PlayerBalance component rendered");
-
   const [balance, setBalance] = useState(null);
   const [error, setError] = useState(null);
-  const { wallet, publicKey, connected } = useWallet();
+  const { publicKey, connected } = useWallet();
 
   useEffect(() => {
-    console.log("PlayerBalance useEffect triggered");
-    console.log("Wallet status:", { connected, publicKey: publicKey?.toString() });
-
     const fetchBalance = async () => {
-      if (wallet && connected) {
+      if (connected && publicKey) {
         try {
           console.log("Fetching balance...");
-          const playerBalance = await getPlayerBalance(wallet);
+          const playerBalance = await getPlayerBalance(publicKey);
           console.log("Fetched balance:", playerBalance);
           setBalance(playerBalance);
           setError(null);
@@ -25,13 +20,11 @@ function PlayerBalance() {
           console.error("Error fetching player balance:", error);
           setError("Failed to fetch balance");
         }
-      } else {
-        console.log("Wallet not connected or not available");
       }
     };
 
     fetchBalance();
-  }, [wallet, connected, publicKey]);
+  }, [connected, publicKey]);
 
   const formatBalance = (balance) => {
     if (balance === null) return 'Loading...';

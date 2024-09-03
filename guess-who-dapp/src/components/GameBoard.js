@@ -35,7 +35,7 @@ function GameBoard() {
   const fetchGameState = async () => {
     try {
       setLoading(true);
-      const state = await getGameState(wallet, gameId);
+      const state = await getGameState(gameId);
       setGameState(state);
     } catch (error) {
       console.error("Error fetching game state:", error);

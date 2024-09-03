@@ -26,6 +26,11 @@ function JoinGame() {
       return;
     }
 
+    if (!gameId) {
+      setError('Please enter a game ID.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 

@@ -1,56 +1,44 @@
-import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import { 
+  Account, 
+  AleoNetworkClient, 
+  ProgramManager, 
+  NetworkRecordProvider,
+  PrivateKey,
+  Transaction
+} from '@aleohq/sdk';
 
-const NETWORK = WalletAdapterNetwork.Testnet;
+const NETWORK_CLIENT = new AleoNetworkClient(process.env.REACT_APP_NETWORK_URL);
+const PROGRAM_MANAGER = new ProgramManager(process.env.REACT_APP_NETWORK_URL);
+const RPC_URL = process.env.REACT_APP_RPC_ENDPOINT_URL;
 const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
 
-export const getPlayerBalance = async (wallet) => {
+export const getPlayerBalance = async (address) => {
   console.log("getPlayerBalance function called");
   
-  if (!wallet || !wallet.adapter) {
-    console.error("Wallet or adapter not available");
-    return null;
-  }
-  
   try {
-    console.log("Wallet adapter methods:", Object.keys(wallet.adapter));
-    
-    if (typeof wallet.adapter.requestRecords === 'function') {
-      console.log("Requesting records...");
-      const records = await wallet.adapter.requestRecords('credits.aleo');
-      console.log("Raw records:", records);
-      
-      let balance = 0;
-      if (Array.isArray(records)) {
-        console.log("Number of records:", records.length);
-        for (const record of records) {
-          console.log("Processing record:", record);
-          if (record && record.data) {
-            try {
-              console.log("Attempting to decrypt record:", record);
-              const decryptedRecord = await wallet.adapter.decrypt(record.data);
-              console.log("Decrypted record:", decryptedRecord);
-              if (decryptedRecord && decryptedRecord.microcredits) {
-                balance += Number(decryptedRecord.microcredits);
-                console.log("Updated balance:", balance);
-              } else {
-                console.log("Decrypted record does not contain microcredits");
-              }
-            } catch (decryptError) {
-              console.error("Error decrypting record:", decryptError);
-            }
-          } else {
-            console.log("Invalid record structure:", record);
-          }
+    const response = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getMappingValue',
+        params: {
+          program_id: 'credits.aleo',
+          mapping_name: 'account',
+          key: address
         }
-      } else {
-        console.log("Records is not an array:", records);
-      }
-      console.log("Final calculated balance:", balance);
-      return balance;
-    } else {
-      console.error("requestRecords method not available on wallet adapter");
-      return null;
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error.message);
     }
+
+    const balance = parseInt(data.result.replace('u64.private', ''), 10);
+    console.log("Fetched balance:", balance);
+    return balance;
   } catch (error) {
     console.error("Error fetching player balance:", error);
     return null;
@@ -58,27 +46,26 @@ export const getPlayerBalance = async (wallet) => {
 };
 
 export const createGame = async (wallet, character) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+  console.log("createGame function called");
   
-  const inputs = [
-    wallet.publicKey,
-    JSON.stringify(character)
-  ];
-
-  const fee = process.env.REACT_APP_GAME_COST; // From .env file
-
   try {
-    console.log("Creating game with inputs:", inputs);
-    const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'create_game',
+    const account = new Account({privateKey: wallet.publicKey});
+    PROGRAM_MANAGER.setAccount(account);
+    
+    const inputs = [
+      account.address().to_string(),
+      JSON.stringify(character)
+    ];
+
+    const fee = parseInt(process.env.REACT_APP_GAME_COST * 1000000); // Convert to microcredits
+
+    const transaction = await PROGRAM_MANAGER.execute(
+      PROGRAM_NAME,
+      'create_game',
       inputs,
       fee,
-      network: NETWORK
-    });
+      true // Make this a private execution
+    );
 
     console.log("Game created, transaction:", transaction);
     return transaction;
@@ -89,28 +76,27 @@ export const createGame = async (wallet, character) => {
 };
 
 export const joinGame = async (wallet, gameId, character) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+  console.log("joinGame function called");
   
-  const inputs = [
-    gameId,
-    wallet.publicKey,
-    JSON.stringify(character)
-  ];
-
-  const fee = process.env.REACT_APP_GAME_COST; // From .env file
-
   try {
-    console.log("Joining game with inputs:", inputs);
-    const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'join_game',
+    const account = new Account({privateKey: wallet.publicKey});
+    PROGRAM_MANAGER.setAccount(account);
+    
+    const inputs = [
+      gameId,
+      account.address().to_string(),
+      JSON.stringify(character)
+    ];
+
+    const fee = parseInt(process.env.REACT_APP_GAME_COST * 1000000); // Convert to microcredits
+
+    const transaction = await PROGRAM_MANAGER.execute(
+      PROGRAM_NAME,
+      'join_game',
       inputs,
       fee,
-      network: NETWORK
-    });
+      true // Make this a private execution
+    );
 
     console.log("Joined game, transaction:", transaction);
     return transaction;
@@ -121,29 +107,28 @@ export const joinGame = async (wallet, gameId, character) => {
 };
 
 export const askQuestion = async (wallet, gameId, questionType, questionValue) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+  console.log("askQuestion function called");
   
-  const inputs = [
-    gameId,
-    wallet.publicKey,
-    questionType,
-    questionValue
-  ];
-
-  const fee = 0.0001; // 0.0001 Aleo
-
   try {
-    console.log("Asking question with inputs:", inputs);
-    const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'ask_question',
+    const account = new Account({privateKey: wallet.publicKey});
+    PROGRAM_MANAGER.setAccount(account);
+    
+    const inputs = [
+      gameId,
+      account.address().to_string(),
+      questionType.toString(),
+      questionValue.toString()
+    ];
+
+    const fee = 50000; // Set an appropriate fee
+
+    const transaction = await PROGRAM_MANAGER.execute(
+      PROGRAM_NAME,
+      'ask_question',
       inputs,
       fee,
-      network: NETWORK
-    });
+      true // Make this a private execution
+    );
 
     console.log("Question asked, transaction:", transaction);
     return transaction;
@@ -154,27 +139,26 @@ export const askQuestion = async (wallet, gameId, questionType, questionValue) =
 };
 
 export const claimReward = async (wallet, gameId) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+  console.log("claimReward function called");
   
-  const inputs = [
-    gameId,
-    wallet.publicKey
-  ];
-
-  const fee = 0.0001; // 0.0001 Aleo
-
   try {
-    console.log("Claiming reward with inputs:", inputs);
-    const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'claim_reward',
+    const account = new Account({privateKey: wallet.publicKey});
+    PROGRAM_MANAGER.setAccount(account);
+    
+    const inputs = [
+      gameId,
+      account.address().to_string()
+    ];
+
+    const fee = 50000; // Set an appropriate fee
+
+    const transaction = await PROGRAM_MANAGER.execute(
+      PROGRAM_NAME,
+      'claim_reward',
       inputs,
       fee,
-      network: NETWORK
-    });
+      true // Make this a private execution
+    );
 
     console.log("Reward claimed, transaction:", transaction);
     return transaction;
@@ -185,24 +169,23 @@ export const claimReward = async (wallet, gameId) => {
 };
 
 export const endGame = async (wallet, gameId) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+  console.log("endGame function called");
   
-  const inputs = [gameId];
-
-  const fee = 0.0001; // 0.0001 Aleo
-
   try {
-    console.log("Ending game with inputs:", inputs);
-    const transaction = await wallet.requestTransaction({
-      program: PROGRAM_NAME,
-      function: 'end_game',
+    const account = new Account({privateKey: wallet.publicKey});
+    PROGRAM_MANAGER.setAccount(account);
+    
+    const inputs = [gameId];
+
+    const fee = 50000; // Set an appropriate fee
+
+    const transaction = await PROGRAM_MANAGER.execute(
+      PROGRAM_NAME,
+      'end_game',
       inputs,
       fee,
-      network: NETWORK
-    });
+      true // Make this a private execution
+    );
 
     console.log("Game ended, transaction:", transaction);
     return transaction;
@@ -212,24 +195,32 @@ export const endGame = async (wallet, gameId) => {
   }
 };
 
-export const getGameState = async (wallet, gameId) => {
-  if (!wallet) {
-    console.error("Wallet not available");
-    return null;
-  }
+export const getGameState = async (gameId) => {
+  console.log("getGameState function called");
   
   try {
-    console.log("Getting game state for game ID:", gameId);
-    const result = await wallet.requestRecords({
-      program: PROGRAM_NAME,
-      filter: {
-        key: 'games',
-        value: gameId
-      }
+    const response = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getMappingValue',
+        params: {
+          program_id: PROGRAM_NAME,
+          mapping_name: 'games',
+          key: gameId
+        }
+      })
     });
 
-    console.log("Game state result:", result);
-    return result[0];
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    console.log("Game state:", data.result);
+    return data.result;
   } catch (error) {
     console.error("Error fetching game state:", error);
     return null;
