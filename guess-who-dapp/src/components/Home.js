@@ -1,16 +1,15 @@
-// Home.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import PlayerBalance from './PlayerBalance';
 
 function Home() {
-  const { publicKey } = useWallet();
+  const { publicKey, connected } = useWallet();
 
   return (
     <div className="home">
       <h1>Welcome to Guess Who ZKP</h1>
-      {publicKey ? (
+      {connected && publicKey ? (
         <div>
           <Link to="/create">
             <button>Create Game</button>

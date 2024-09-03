@@ -11,7 +11,7 @@ function JoinGame() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, requestTransaction } = useWallet();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -45,9 +45,15 @@ function JoinGame() {
         gender: selectedCharacter.attributes.gender,
       };
 
-      const result = await joinGame(wallet, gameId, character);
-      console.log("Joined game:", result);
-      navigate(`/game/${gameId}`);
+      console.log("Calling joinGame with publicKey:", publicKey);
+      const txId = await joinGame(publicKey, gameId, character, requestTransaction);
+      console.log("Joined game, transaction ID:", txId);
+      
+      if (txId) {
+        navigate(`/game/${gameId}`);
+      } else {
+        throw new Error("Failed to join game. No transaction ID returned.");
+      }
     } catch (error) {
       console.error("Error joining game:", error);
       setError("Failed to join game. Please try again.");

@@ -10,7 +10,7 @@ function CreateGame() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, requestTransaction } = useWallet();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -39,9 +39,15 @@ function CreateGame() {
         gender: selectedCharacter.attributes.gender,
       };
 
-      const result = await createGame(wallet, character);
-      console.log("Game created:", result);
-      navigate(`/game/${result.transactionId()}`);
+      console.log("Calling createGame with publicKey:", publicKey);
+      const txId = await createGame(publicKey, character, requestTransaction);
+      console.log("Game created, transaction ID:", txId);
+      
+      if (txId) {
+        navigate(`/game/${txId}`);
+      } else {
+        throw new Error("Failed to create game. No transaction ID returned.");
+      }
     } catch (error) {
       console.error("Error creating game:", error);
       setError("Failed to create game. Please try again.");

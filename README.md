@@ -288,12 +288,12 @@ The Leo contract (`guess_who_zkp\src\main.leo`) defines the game logic, includin
    ```
 
 2. Create a `.env` file in the `guess-who-dapp` directory with the following content:
-   ```
-   REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
-   REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
-   REACT_APP_GAME_COST=0.0001
-   REACT_APP_NETWORK=testnetbeta
-   REACT_APP_RPC_ENDPOINT_URL=https://testnetbeta.aleorpc.com
+   ```bash
+      REACT_APP_PROGRAM_NAME=guess_who_zkp.aleo
+      REACT_APP_NETWORK_URL=https://api.explorer.aleo.org/v1
+      REACT_APP_RPC_ENDPOINT_URL=https://testnetbeta.aleorpc.com
+      REACT_APP_NETWORK=testnet
+      REACT_APP_GAME_COST=0.0001
    ```
 
 ### 4.2 Project Structure
@@ -333,12 +333,19 @@ Here are the main React components of the application:
 1. **App.js**: The main component that sets up routing and wallet connection.
 
 ```javascript
-   import React, { useMemo } from 'react';
+   import React, { useMemo, useEffect, useState } from 'react';
    import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-   import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-   import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
+   import {
+   WalletProvider,
+   useWallet
+   } from '@demox-labs/aleo-wallet-adapter-react';
+   import {
+   WalletModalProvider,
+   WalletMultiButton
+   } from '@demox-labs/aleo-wallet-adapter-reactui';
    import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
    import { DecryptPermission } from '@demox-labs/aleo-wallet-adapter-base';
+   import { initializeWasm } from '@aleohq/sdk';
 
    import Home from './components/Home';
    import CreateGame from './components/CreateGame';
@@ -350,53 +357,58 @@ Here are the main React components of the application:
    import './styles/App.css';
 
    function App() {
-   console.log("App function called");
+   const [wasmInitialized, setWasmInitialized] = useState(false);
+
+   useEffect(() => {
+      const initWasm = async () => {
+         try {
+         await initializeWasm();
+         setWasmInitialized(true);
+         console.log("WebAssembly initialized successfully");
+         } catch (error) {
+         console.error("Failed to initialize WebAssembly:", error);
+         }
+      };
+
+      initWasm();
+   }, []);
 
    const wallets = useMemo(
-      () => {
-         console.log("Creating wallet adapters");
-         return [
+      () => [
          new LeoWalletAdapter({
-            appName: 'Guess Who ZKP Game',
+         appName: 'Guess Who ZKP Game',
          })
-         ];
-      },
+      ],
       []
    );
 
-   const appContent = useMemo(() => {
-      console.log("Creating app content");
-      return (
-         <ErrorBoundary>
+   if (!wasmInitialized) {
+      return <div>Initializing WebAssembly...</div>;
+   }
+
+   return (
+      <ErrorBoundary>
          <WalletProvider 
-            wallets={wallets} 
-            autoConnect={true}
-            decryptPermission={DecryptPermission.UponRequest}
-            onError={(error) => {
-               console.error('Wallet error:', error);
-            }}
+         wallets={wallets} 
+         autoConnect={true}
+         decryptPermission={DecryptPermission.UponRequest}
          >
-            <WalletModalProvider>
-               <Router>
+         <WalletModalProvider>
+            <Router>
                <div className="App">
-                  <WalletMultiButton />
-                  <Routes>
-                     <Route path="/" element={<Home />} />
-                     <Route path="/create" element={<CreateGame />} />
-                     <Route path="/join" element={<JoinGame />} />
-                     <Route path="/game/:id" element={<GameBoard />} />
-                  </Routes>
+               <WalletMultiButton />
+               <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/create" element={<CreateGame />} />
+                  <Route path="/join" element={<JoinGame />} />
+                  <Route path="/game/:id" element={<GameBoard />} />
+               </Routes>
                </div>
-               </Router>
-            </WalletModalProvider>
+            </Router>
+         </WalletModalProvider>
          </WalletProvider>
-         </ErrorBoundary>
-      );
-   }, [wallets]);
-
-   console.log("App rendered");
-
-   return appContent;
+      </ErrorBoundary>
+   );
    }
 
    export default App;
@@ -411,12 +423,12 @@ Here are the main React components of the application:
    import PlayerBalance from './PlayerBalance';
 
    function Home() {
-   const { publicKey } = useWallet();
+   const { publicKey, connected } = useWallet();
 
    return (
       <div className="home">
          <h1>Welcome to Guess Who ZKP</h1>
-         {publicKey ? (
+         {connected && publicKey ? (
          <div>
             <Link to="/create">
                <button>Create Game</button>
@@ -452,7 +464,7 @@ Here are the main React components of the application:
    const [selectedCharacter, setSelectedCharacter] = useState(null);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
-   const { publicKey, wallet } = useWallet();
+   const { publicKey, requestTransaction } = useWallet();
    const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
@@ -481,9 +493,15 @@ Here are the main React components of the application:
          gender: selectedCharacter.attributes.gender,
          };
 
-         const result = await createGame(wallet, character);
-         console.log("Game created:", result);
-         navigate(`/game/${result.transactionId()}`);
+         console.log("Calling createGame with publicKey:", publicKey);
+         const txId = await createGame(publicKey, character, requestTransaction);
+         console.log("Game created, transaction ID:", txId);
+         
+         if (txId) {
+         navigate(`/game/${txId}`);
+         } else {
+         throw new Error("Failed to create game. No transaction ID returned.");
+         }
       } catch (error) {
          console.error("Error creating game:", error);
          setError("Failed to create game. Please try again.");
@@ -539,7 +557,7 @@ Here are the main React components of the application:
    const [selectedCharacter, setSelectedCharacter] = useState(null);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState(null);
-   const { publicKey, wallet } = useWallet();
+   const { publicKey, requestTransaction } = useWallet();
    const navigate = useNavigate();
 
    const handleSubmit = async (e) => {
@@ -573,9 +591,15 @@ Here are the main React components of the application:
          gender: selectedCharacter.attributes.gender,
          };
 
-         const result = await joinGame(wallet, gameId, character);
-         console.log("Joined game:", result);
+         console.log("Calling joinGame with publicKey:", publicKey);
+         const txId = await joinGame(publicKey, gameId, character, requestTransaction);
+         console.log("Joined game, transaction ID:", txId);
+         
+         if (txId) {
          navigate(`/game/${gameId}`);
+         } else {
+         throw new Error("Failed to join game. No transaction ID returned.");
+         }
       } catch (error) {
          console.error("Error joining game:", error);
          setError("Failed to join game. Please try again.");
@@ -655,7 +679,7 @@ Here are the main React components of the application:
    const [eliminatedCharacters, setEliminatedCharacters] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
-   const { publicKey, wallet } = useWallet();
+   const { publicKey, requestTransaction } = useWallet();
 
    useEffect(() => {
       fetchGameState();
@@ -680,10 +704,10 @@ Here are the main React components of the application:
       if (!selectedQuestionType || !selectedQuestionValue) return;
       try {
          setLoading(true);
-         const result = await askQuestion(wallet, gameId, selectedQuestionType, selectedQuestionValue);
-         console.log("Question asked:", result);
+         const txId = await askQuestion(publicKey, gameId, selectedQuestionType, selectedQuestionValue, requestTransaction);
+         console.log("Question asked, transaction ID:", txId);
          await fetchGameState();
-         eliminateCharacters(selectedQuestionType, selectedQuestionValue, result.answer);
+         eliminateCharacters(selectedQuestionType, selectedQuestionValue, gameState.answer);
       } catch (error) {
          console.error("Error asking question:", error);
          setError("Failed to ask question. Please try again.");
@@ -695,8 +719,8 @@ Here are the main React components of the application:
    const handleClaimReward = async () => {
       try {
          setLoading(true);
-         const result = await claimReward(wallet, gameId);
-         console.log("Reward claimed:", result);
+         const txId = await claimReward(publicKey, gameId, requestTransaction);
+         console.log("Reward claimed, transaction ID:", txId);
          alert("Reward claimed successfully!");
          await fetchGameState();
       } catch (error) {
@@ -710,8 +734,8 @@ Here are the main React components of the application:
    const handleEndGame = async () => {
       try {
          setLoading(true);
-         const result = await endGame(wallet, gameId);
-         console.log("Game ended:", result);
+         const txId = await endGame(publicKey, gameId, requestTransaction);
+         console.log("Game ended, transaction ID:", txId);
          alert("Game ended successfully!");
          await fetchGameState();
       } catch (error) {
@@ -1043,23 +1067,39 @@ The application uses two main utility files:
 1. **aleoUtils.js**: Contains functions for interacting with the Leo contract.
 
 ```javascript
-   import { 
-   Account, 
-   AleoNetworkClient, 
-   ProgramManager, 
-   NetworkRecordProvider,
-   PrivateKey,
-   Transaction
-   } from '@aleohq/sdk';
+   import { ProgramManager, initializeWasm, Account } from '@aleohq/sdk';
 
-   const NETWORK_CLIENT = new AleoNetworkClient(process.env.REACT_APP_NETWORK_URL);
-   const PROGRAM_MANAGER = new ProgramManager(process.env.REACT_APP_NETWORK_URL);
+   const NETWORK_URL = process.env.REACT_APP_NETWORK_URL;
    const RPC_URL = process.env.REACT_APP_RPC_ENDPOINT_URL;
    const PROGRAM_NAME = process.env.REACT_APP_PROGRAM_NAME;
+   const FEE = 0.02; // 0.02 Aleo credits
+
+   let wasmInitialized = false;
+
+   const initializeAleoWasm = async () => {
+   if (!wasmInitialized) {
+      await initializeWasm();
+      wasmInitialized = true;
+      console.log("WebAssembly initialized");
+   }
+   };
+
+   const getNetworkUrl = (path = '') => {
+   const url = `${RPC_URL}/testnet${path}`;
+   console.log("Constructed URL:", url);
+   return url;
+   };
+
+   const createProgramManager = () => {
+   const url = getNetworkUrl();
+   console.log("Creating ProgramManager with URL:", url);
+   return new ProgramManager(url);
+   };
 
    export const getPlayerBalance = async (address) => {
    console.log("getPlayerBalance function called");
-   
+   await initializeAleoWasm();
+
    try {
       const response = await fetch(RPC_URL, {
          method: 'POST',
@@ -1090,182 +1130,152 @@ The application uses two main utility files:
    }
    };
 
-   export const createGame = async (wallet, character) => {
+   export const createGame = async (publicKey, character, requestTransaction) => {
    console.log("createGame function called");
-   
+   await initializeAleoWasm();
+
    try {
-      const account = new Account({privateKey: wallet.publicKey});
-      PROGRAM_MANAGER.setAccount(account);
-      
+      const programManager = createProgramManager();
+
       const inputs = [
-         account.address().to_string(),
+         publicKey,
          JSON.stringify(character)
       ];
 
-      const fee = parseInt(process.env.REACT_APP_GAME_COST * 1000000); // Convert to microcredits
-
-      const transaction = await PROGRAM_MANAGER.execute(
+      console.log("Executing create_game with inputs:", inputs);
+      
+      const transaction = await programManager.execute(
          PROGRAM_NAME,
          'create_game',
          inputs,
-         fee,
-         true // Make this a private execution
+         FEE,
+         undefined,
+         true
       );
 
-      console.log("Game created, transaction:", transaction);
-      return transaction;
+      console.log("Transaction built:", transaction);
+      const txId = await requestTransaction(transaction);
+
+      console.log("Game created, transaction ID:", txId);
+      return txId;
    } catch (error) {
       console.error("Error creating game:", error);
-      return null;
+      throw error;
    }
    };
 
-   export const joinGame = async (wallet, gameId, character) => {
+   export const joinGame = async (publicKey, gameId, character, requestTransaction) => {
    console.log("joinGame function called");
-   
+   await initializeAleoWasm();
+
    try {
-      const account = new Account({privateKey: wallet.publicKey});
-      PROGRAM_MANAGER.setAccount(account);
-      
+      const programManager = createProgramManager();
+
       const inputs = [
          gameId,
-         account.address().to_string(),
+         publicKey,
          JSON.stringify(character)
       ];
 
-      const fee = parseInt(process.env.REACT_APP_GAME_COST * 1000000); // Convert to microcredits
+      const transaction = await programManager.execute(PROGRAM_NAME, 'join_game', inputs, FEE, undefined, true);
+      console.log("Transaction built:", transaction);
+      const txId = await requestTransaction(transaction);
 
-      const transaction = await PROGRAM_MANAGER.execute(
-         PROGRAM_NAME,
-         'join_game',
-         inputs,
-         fee,
-         true // Make this a private execution
-      );
-
-      console.log("Joined game, transaction:", transaction);
-      return transaction;
+      console.log("Joined game, transaction ID:", txId);
+      return txId;
    } catch (error) {
       console.error("Error joining game:", error);
-      return null;
+      throw error;
    }
    };
 
-   export const askQuestion = async (wallet, gameId, questionType, questionValue) => {
+   export const askQuestion = async (publicKey, gameId, questionType, questionValue, requestTransaction) => {
    console.log("askQuestion function called");
-   
+   await initializeAleoWasm();
+
    try {
-      const account = new Account({privateKey: wallet.publicKey});
-      PROGRAM_MANAGER.setAccount(account);
-      
+      const programManager = createProgramManager();
+
       const inputs = [
          gameId,
-         account.address().to_string(),
+         publicKey,
          questionType.toString(),
          questionValue.toString()
       ];
 
-      const fee = 50000; // Set an appropriate fee
+      const transaction = await programManager.execute(PROGRAM_NAME, 'ask_question', inputs, FEE, undefined, true);
+      console.log("Transaction built:", transaction);
+      const txId = await requestTransaction(transaction);
 
-      const transaction = await PROGRAM_MANAGER.execute(
-         PROGRAM_NAME,
-         'ask_question',
-         inputs,
-         fee,
-         true // Make this a private execution
-      );
-
-      console.log("Question asked, transaction:", transaction);
-      return transaction;
+      console.log("Question asked, transaction ID:", txId);
+      return txId;
    } catch (error) {
       console.error("Error asking question:", error);
-      return null;
+      throw error;
    }
    };
 
-   export const claimReward = async (wallet, gameId) => {
+   export const claimReward = async (publicKey, gameId, requestTransaction) => {
    console.log("claimReward function called");
-   
+   await initializeAleoWasm();
+
    try {
-      const account = new Account({privateKey: wallet.publicKey});
-      PROGRAM_MANAGER.setAccount(account);
-      
+      const programManager = createProgramManager();
+
       const inputs = [
          gameId,
-         account.address().to_string()
+         publicKey
       ];
 
-      const fee = 50000; // Set an appropriate fee
+      const transaction = await programManager.execute(PROGRAM_NAME, 'claim_reward', inputs, FEE, undefined, true);
+      console.log("Transaction built:", transaction);
+      const txId = await requestTransaction(transaction);
 
-      const transaction = await PROGRAM_MANAGER.execute(
-         PROGRAM_NAME,
-         'claim_reward',
-         inputs,
-         fee,
-         true // Make this a private execution
-      );
-
-      console.log("Reward claimed, transaction:", transaction);
-      return transaction;
+      console.log("Reward claimed, transaction ID:", txId);
+      return txId;
    } catch (error) {
       console.error("Error claiming reward:", error);
-      return null;
+      throw error;
    }
    };
 
-   export const endGame = async (wallet, gameId) => {
+   export const endGame = async (publicKey, gameId, requestTransaction) => {
    console.log("endGame function called");
-   
+   await initializeAleoWasm();
+
    try {
-      const account = new Account({privateKey: wallet.publicKey});
-      PROGRAM_MANAGER.setAccount(account);
-      
+      const programManager = createProgramManager();
+
       const inputs = [gameId];
 
-      const fee = 50000; // Set an appropriate fee
+      const transaction = await programManager.execute(PROGRAM_NAME, 'end_game', inputs, FEE, undefined, true);
+      console.log("Transaction built:", transaction);
+      const txId = await requestTransaction(transaction);
 
-      const transaction = await PROGRAM_MANAGER.execute(
-         PROGRAM_NAME,
-         'end_game',
-         inputs,
-         fee,
-         true // Make this a private execution
-      );
-
-      console.log("Game ended, transaction:", transaction);
-      return transaction;
+      console.log("Game ended, transaction ID:", txId);
+      return txId;
    } catch (error) {
       console.error("Error ending game:", error);
-      return null;
+      throw error;
    }
    };
 
    export const getGameState = async (gameId) => {
    console.log("getGameState function called");
-   
-   try {
-      const response = await fetch(RPC_URL, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({
-         jsonrpc: '2.0',
-         id: 1,
-         method: 'getMappingValue',
-         params: {
-            program_id: PROGRAM_NAME,
-            mapping_name: 'games',
-            key: gameId
-         }
-         })
-      });
+   await initializeAleoWasm();
 
+   try {
+      const url = getNetworkUrl(`/program/${PROGRAM_NAME}/mapping/games/${gameId}`);
+      console.log("Fetching game state from URL:", url);
+      const response = await fetch(url);
       const data = await response.json();
-      if (data.error) {
-         throw new Error(data.error.message);
+      
+      if (response.status !== 200) {
+         throw new Error(data.message || 'Failed to fetch game state');
       }
 
-      console.log("Game state:", data.result);
-      return data.result;
+      console.log("Game state:", data);
+      return data;
    } catch (error) {
       console.error("Error fetching game state:", error);
       return null;

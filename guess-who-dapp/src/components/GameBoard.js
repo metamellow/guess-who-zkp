@@ -24,7 +24,7 @@ function GameBoard() {
   const [eliminatedCharacters, setEliminatedCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, requestTransaction } = useWallet();
 
   useEffect(() => {
     fetchGameState();
@@ -49,10 +49,10 @@ function GameBoard() {
     if (!selectedQuestionType || !selectedQuestionValue) return;
     try {
       setLoading(true);
-      const result = await askQuestion(wallet, gameId, selectedQuestionType, selectedQuestionValue);
-      console.log("Question asked:", result);
+      const txId = await askQuestion(publicKey, gameId, selectedQuestionType, selectedQuestionValue, requestTransaction);
+      console.log("Question asked, transaction ID:", txId);
       await fetchGameState();
-      eliminateCharacters(selectedQuestionType, selectedQuestionValue, result.answer);
+      eliminateCharacters(selectedQuestionType, selectedQuestionValue, gameState.answer);
     } catch (error) {
       console.error("Error asking question:", error);
       setError("Failed to ask question. Please try again.");
@@ -64,8 +64,8 @@ function GameBoard() {
   const handleClaimReward = async () => {
     try {
       setLoading(true);
-      const result = await claimReward(wallet, gameId);
-      console.log("Reward claimed:", result);
+      const txId = await claimReward(publicKey, gameId, requestTransaction);
+      console.log("Reward claimed, transaction ID:", txId);
       alert("Reward claimed successfully!");
       await fetchGameState();
     } catch (error) {
@@ -79,8 +79,8 @@ function GameBoard() {
   const handleEndGame = async () => {
     try {
       setLoading(true);
-      const result = await endGame(wallet, gameId);
-      console.log("Game ended:", result);
+      const txId = await endGame(publicKey, gameId, requestTransaction);
+      console.log("Game ended, transaction ID:", txId);
       alert("Game ended successfully!");
       await fetchGameState();
     } catch (error) {
